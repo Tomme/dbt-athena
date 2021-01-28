@@ -78,13 +78,6 @@ class AthenaConnectionManager(SQLConnectionManager):
         return connection
 
     @classmethod
-    def get_status(cls, cursor) -> str:
-        if cursor.state == AthenaQueryExecution.STATE_SUCCEEDED:
-            return "OK"
-        else:
-            return "ERROR"
-
-    @classmethod
     def get_response(cls, cursor) -> AdapterResponse:
         if cursor.state == AthenaQueryExecution.STATE_SUCCEEDED:
             code = "OK"
