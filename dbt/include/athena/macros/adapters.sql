@@ -1,8 +1,3 @@
-
-{% macro ilike(column, value) -%}
-	regexp_like({{ column }}, '(?i)\A{{ value }}\Z')
-{%- endmacro %}
-
 {% macro set_table_classification(relation, default_value) -%}
     {%- set format = config.get('format', default=default_value) -%}
 
@@ -79,7 +74,6 @@
       table_name as name,
       table_schema as schema,
       'view' as table_type
-
     from {{ schema_relation.information_schema() }}.views
     where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')    
   {% endcall %}
@@ -97,9 +91,9 @@
           null as numeric_scale
 
       from {{ relation.information_schema('columns') }}
-      where {{ ilike('table_name', relation.identifier) }}
+      where LOWER(table_name) = "{{ relation.identifier }}"
         {% if relation.schema %}
-            and {{ ilike('table_schema', relation.schema) }}
+            and LOWER(table_schema) = "{{ relation.schema }}"
         {% endif %}
       order by ordinal_position
 
