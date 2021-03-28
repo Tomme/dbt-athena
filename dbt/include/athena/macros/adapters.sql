@@ -64,26 +64,26 @@
 {% macro athena__list_relations_without_caching(schema_relation) %}
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
     select
-      tables.table_catalog as database,
-      tables.table_name as name,
-      tables.table_schema as schema,
-
-      case
-        when views.table_name is not null
-            then 'view'
-        when table_type = 'BASE TABLE'
-            then 'table'
-        else table_type
-      end as table_type
+      table_catalog as database,
+      table_name as name,
+      table_schema as schema,
+      'table' as table_type
 
     from {{ schema_relation.information_schema() }}.tables
-    left join {{ schema_relation.information_schema() }}.views
-      on tables.table_catalog = views.table_catalog
-      and tables.table_schema = views.table_schema
-      and tables.table_name = views.table_name
-    where {{ ilike('tables.table_schema', schema_relation.schema) }}
+    where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')
+
+    UNION ALL
+
+    select
+      table_catalog as database,
+      table_name as name,
+      table_schema as schema,
+      'view' as table_type
+
+    from {{ schema_relation.information_schema() }}.views
+    where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')    
   {% endcall %}
-  {{ return(load_result('list_relations_without_caching').table) }}
+  {% do return(load_result('list_relations_without_caching').table) %}
 {% endmacro %}
 
 {% macro athena__get_columns_in_relation(relation) -%}
