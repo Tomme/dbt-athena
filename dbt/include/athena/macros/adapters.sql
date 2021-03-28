@@ -58,24 +58,30 @@
 
 {% macro athena__list_relations_without_caching(schema_relation) %}
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
-    select
-      table_catalog as database,
-      table_name as name,
-      table_schema as schema,
-      'table' as table_type
+    WITH views AS (
+      select
+        table_catalog as database,
+        table_name as name,
+        table_schema as schema
+      from {{ schema_relation.information_schema() }}.views
+      where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')
+    ), tables AS (
+      select
+        table_catalog as database,
+        table_name as name,
+        table_schema as schema
 
-    from {{ schema_relation.information_schema() }}.tables
-    where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')
+      from {{ schema_relation.information_schema() }}.tables
+      where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')
 
+      -- Views appear in both `tables` and `views`, so excluding them from tables
+      EXCEPT 
+
+      select * from views
+    )
+    select views.*, 'view' AS table_type FROM views
     UNION ALL
-
-    select
-      table_catalog as database,
-      table_name as name,
-      table_schema as schema,
-      'view' as table_type
-    from {{ schema_relation.information_schema() }}.views
-    where LOWER(table_schema) = LOWER('{{ schema_relation.schema }}')    
+    select tables.*, 'table' AS table_type FROM tables
   {% endcall %}
   {% do return(load_result('list_relations_without_caching').table) %}
 {% endmacro %}
