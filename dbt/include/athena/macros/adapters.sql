@@ -100,7 +100,7 @@
   {% endcall %}
 
   {% set table = load_result('get_columns_in_relation').table %}
-  {{ return(sql_convert_columns_in_relation(table)) }}
+  {% do return(sql_convert_columns_in_relation(table)) %}
 {% endmacro %}
 
 {% macro athena__drop_relation(relation) -%}
