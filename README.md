@@ -32,8 +32,8 @@ Take note of your AWS region code (e.g. `us-west-2` or `eu-west-`).
 
 ### Credentials
 
-This plugin does not accept any credentials directly. Instead, credentials are determined automatically based on `aws cli` conventions and
-stored login into.
+This plugin does not accept any credentials directly. Instead, [credentials are determined automatically](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) based on `aws cli`/`boto3` conventions and
+stored login info.
 
 ### Configuring your profile
 
