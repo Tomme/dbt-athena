@@ -28,7 +28,9 @@ LOCATION 's3://my-staging-bucket/'
 WITH DBPROPERTIES ('creator'='Foo Bar', 'email'='foo@bar.com');
 ```
 
-Take note of your AWS region code (e.g. `us-west-2` or `eu-west-`).
+Notes:
+- Take note of your AWS region code (e.g. `us-west-2` or `eu-west-2`, etc.).
+- You can also use [AWS Glue](https://docs.aws.amazon.com/athena/latest/ug/glue-athena.html) to create and manage Athena databases.
 
 ### Credentials
 
