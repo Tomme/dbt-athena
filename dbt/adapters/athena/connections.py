@@ -26,7 +26,7 @@ class AthenaCredentials(Credentials):
     s3_staging_dir: str
     region_name: str
     schema: str
-    work_group: Optional[str]
+    work_group: Optional[str] = None
     poll_interval: float = 1.0
     _ALIASES = {
         "catalog": "database"
