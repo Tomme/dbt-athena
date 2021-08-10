@@ -59,7 +59,7 @@ class AthenaCursor(Cursor):
             retry_config=self._retry_config,
         )
 
-    def _clean_up(
+    def _clean_up_partitions(
         self,
         operation: str
     ):
@@ -91,6 +91,36 @@ class AthenaCursor(Cursor):
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
 
+
+    def _clean_up_table(
+        self,
+        operation: str
+    ):
+        # Extract metadata from query
+        query_pattern = re.compile("drop\s+table\s+if\s+exists\s+([^\s\.]+)\.([^\s\.]+)")
+        query_search = query_pattern.search(operation)
+        if query_search is None:
+            raise OperationalError('Unable to extract metadata for cleaning up table data from ' + operation)
+        database_name = query_search.group(1)
+        table_name = query_search.group(2)
+
+        # Look up Glue partitions & clean up
+        glue_client = boto3.client('glue')
+        table = glue_client.get_table(
+            DatabaseName=database_name,
+            Name=table_name
+        )
+        if table is not None:
+            logger.debug("Deleting table data from'{}'", table["Table"]["StorageDescriptor"]["Location"])
+            p = re.compile('s3://([^/]*)/(.*)')
+            m = p.match(table["Table"]["StorageDescriptor"]["Location"])
+            if m is not None:
+                bucket_name = m.group(1)
+                prefix = m.group(2)
+                s3_resource = boto3.resource('s3')
+                s3_bucket = s3_resource.Bucket(bucket_name)
+                s3_bucket.objects.filter(Prefix=prefix).delete()
+
     def execute(
         self,
         operation: str,
@@ -101,10 +131,11 @@ class AthenaCursor(Cursor):
         cache_expiration_time: int = 0,
     ):
         if re.search("delete\s+from", operation):
-            self._clean_up(operation)
+            self._clean_up_partitions(operation)
             return self
 
-        # @TODO: intercepting 'drop table' and clean up S3
+        if re.search("drop\s+table", operation):
+            self._clean_up_table(operation)
 
         query_id = self._execute(
             operation,
