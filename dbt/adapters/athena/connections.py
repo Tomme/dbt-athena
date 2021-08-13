@@ -21,7 +21,7 @@ from dbt.contracts.connection import Connection, AdapterResponse
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.exceptions import RuntimeException, FailedToConnectException
 from dbt.logger import GLOBAL_LOGGER as logger
-
+from botocore.exceptions import ClientError
 
 @dataclass
 class AthenaCredentials(Credentials):
@@ -106,10 +106,16 @@ class AthenaCursor(Cursor):
 
         # Look up Glue partitions & clean up
         glue_client = boto3.client('glue')
-        table = glue_client.get_table(
-            DatabaseName=database_name,
-            Name=table_name
-        )
+        try:
+            table = glue_client.get_table(
+                DatabaseName=database_name,
+                Name=table_name
+            )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'EntityNotFoundException':
+                logger.debug("'{}' Table not exists to delete", table_name)
+                return
+
         if table is not None:
             logger.debug("Deleting table data from'{}'", table["Table"]["StorageDescriptor"]["Location"])
             p = re.compile('s3://([^/]*)/(.*)')
