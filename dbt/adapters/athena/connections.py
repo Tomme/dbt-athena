@@ -113,7 +113,7 @@ class AthenaCursor(Cursor):
             )
         except ClientError as e:
             if e.response['Error']['Code'] == 'EntityNotFoundException':
-                logger.debug("'{}' Table not exists to delete", table_name)
+                logger.debug("Table '{}' does not exists - Ignoring", table_name)
                 return
 
         if table is not None:
