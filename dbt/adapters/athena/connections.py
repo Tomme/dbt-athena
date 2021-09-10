@@ -59,39 +59,6 @@ class AthenaCursor(Cursor):
             retry_config=self._retry_config,
         )
 
-    def _clean_up_partitions(
-        self,
-        operation: str
-    ):
-        # Extract metadata from query
-        query_pattern = re.compile("delete\s+from\s+([^\s\.]+)\.([^\s\.]+)\s+where\s+([^;]+);")
-        query_search = query_pattern.search(operation)
-        if query_search is None:
-            raise OperationalError('Unable to extract metadata for cleaning up partitions from ' + operation)
-        database_name = query_search.group(1)
-        table_name = query_search.group(2)
-        where_condition = query_search.group(3)
-
-        # Look up Glue partitions & clean up
-        glue_client = boto3.client('glue')
-        s3_resource = boto3.resource('s3')
-        partitions = glue_client.get_partitions(
-            # CatalogId='awsdatacatalog',  # Using this caused permission error that 'glue:GetPartitions' is required
-            DatabaseName=database_name,
-            TableName=table_name,
-            Expression=where_condition
-        )
-        p = re.compile('s3://([^/]*)/(.*)')
-        for partition in partitions["Partitions"]:
-            logger.debug("Deleting objects for partition '{}' at '{}'", partition["Values"], partition["StorageDescriptor"]["Location"])
-            m = p.match(partition["StorageDescriptor"]["Location"])
-            if m is not None:
-                bucket_name = m.group(1)
-                prefix = m.group(2)
-                s3_bucket = s3_resource.Bucket(bucket_name)
-                s3_bucket.objects.filter(Prefix=prefix).delete()
-
-
     def _clean_up_table(
         self,
         operation: str
@@ -136,10 +103,6 @@ class AthenaCursor(Cursor):
         cache_size: int = 0,
         cache_expiration_time: int = 0,
     ):
-        if re.search("delete\s+from", operation):
-            self._clean_up_partitions(operation)
-            return self
-
         if re.search("drop\s+table", operation):
             self._clean_up_table(operation)
 

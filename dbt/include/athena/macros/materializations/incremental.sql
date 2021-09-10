@@ -49,9 +49,8 @@
     {%- do partitions.append('(' + single_partition_expression + ')') -%}
   {%- endfor -%}
   {%- set partition_expression = partitions | join(' or ') -%}
-    delete from
-       {{ target_relation }}
-    where {{partition_expression}};
+  {%- do adapter.clean_up_partitions(target_relation.schema, target_relation.table, partition_expression) -%}
+
 {%- endmacro %}
 
 {% materialization incremental, adapter='athena' -%}
@@ -89,7 +88,7 @@
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
-      {% do run_query(delete_overlapping_partitions(target_relation, tmp_relation, partitioned_by)) %}
+      {% do delete_overlapping_partitions(target_relation, tmp_relation, partitioned_by) %}
       {% set build_sql = incremental_insert(tmp_relation, target_relation) %}
       {% do to_drop.append(tmp_relation) %}
   {% else %}
