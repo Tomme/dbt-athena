@@ -5,8 +5,6 @@ from copy import deepcopy
 from decimal import Decimal
 from concurrent.futures.thread import ThreadPoolExecutor
 
-import boto3
-import re
 from pyathena.connection import Connection as AthenaConnection
 from pyathena.result_set import AthenaResultSet
 from pyathena.model import AthenaQueryExecution
@@ -21,7 +19,6 @@ from dbt.contracts.connection import Connection, AdapterResponse
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.exceptions import RuntimeException, FailedToConnectException
 from dbt.logger import GLOBAL_LOGGER as logger
-from botocore.exceptions import ClientError
 
 @dataclass
 class AthenaCredentials(Credentials):
@@ -59,41 +56,6 @@ class AthenaCursor(Cursor):
             retry_config=self._retry_config,
         )
 
-    def _clean_up_table(
-        self,
-        operation: str
-    ):
-        # Extract metadata from query
-        query_pattern = re.compile("drop\s+table\s+if\s+exists\s+([^\s\.]+)\.([^\s\.]+)")
-        query_search = query_pattern.search(operation)
-        if query_search is None:
-            raise OperationalError('Unable to extract metadata for cleaning up table data from ' + operation)
-        database_name = query_search.group(1)
-        table_name = query_search.group(2)
-
-        # Look up Glue partitions & clean up
-        glue_client = boto3.client('glue')
-        try:
-            table = glue_client.get_table(
-                DatabaseName=database_name,
-                Name=table_name
-            )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'EntityNotFoundException':
-                logger.debug("Table '{}' does not exists - Ignoring", table_name)
-                return
-
-        if table is not None:
-            logger.debug("Deleting table data from'{}'", table["Table"]["StorageDescriptor"]["Location"])
-            p = re.compile('s3://([^/]*)/(.*)')
-            m = p.match(table["Table"]["StorageDescriptor"]["Location"])
-            if m is not None:
-                bucket_name = m.group(1)
-                prefix = m.group(2)
-                s3_resource = boto3.resource('s3')
-                s3_bucket = s3_resource.Bucket(bucket_name)
-                s3_bucket.objects.filter(Prefix=prefix).delete()
-
     def execute(
         self,
         operation: str,
@@ -103,9 +65,6 @@ class AthenaCursor(Cursor):
         cache_size: int = 0,
         cache_expiration_time: int = 0,
     ):
-        if re.search("drop\s+table", operation):
-            self._clean_up_table(operation)
-
         query_id = self._execute(
             operation,
             parameters=parameters,
