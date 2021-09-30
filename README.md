@@ -1,6 +1,6 @@
 # dbt-athena
 
-* Supports dbt version `0.20.0`
+* Supports dbt version `0.20.2`
 * Supports [Seeds][seeds]
 * Correctly detects views and their columns
 * **Experimental** support for [incremental models][incremental]

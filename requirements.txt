@@ -1,2 +1,2 @@
-dbt-core==0.20.0
+dbt-core==0.20.2
 pyathena==2.2.0
