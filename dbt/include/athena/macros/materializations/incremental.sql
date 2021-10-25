@@ -48,9 +48,9 @@
     {%- set single_partition_expression = single_partition | join(' and ') -%}
     {%- do partitions.append('(' + single_partition_expression + ')') -%}
   {%- endfor -%}
-  {%- set partition_expression = partitions | join(' or ') -%}
-  {%- do adapter.clean_up_partitions(target_relation.schema, target_relation.table, partition_expression) -%}
-
+  {%- for i in range(partitions | length) %}
+    {%- do adapter.clean_up_partitions(target_relation.schema, target_relation.table, partitions[i]) -%}
+  {%- endfor -%}
 {%- endmacro %}
 
 {% materialization incremental, adapter='athena' -%}
