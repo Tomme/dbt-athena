@@ -41,16 +41,17 @@ stored login info. You can configure the AWS profile name to use via `aws_profil
 
 A dbt profile can be configured to run against AWS Athena using the following configuration:
 
-| Option          | Description                                                                     | Required?  | Example             |
-|---------------- |-------------------------------------------------------------------------------- |----------- |-------------------- |
-| s3_staging_dir  | S3 location to store Athena query results and metadata                          | Required   | `s3://bucket/dbt/`  |
-| region_name     | AWS region of your Athena instance                                              | Required   | `eu-west-1`         |
-| schema          | Specify the schema (Athena database) to build models into (lowercase **only**)  | Required   | `dbt`               |
-| database        | Specify the database (Data catalog) to build models into (lowercase **only**)   | Required   | `awsdatacatalog`    |
-| poll_interval   | Interval in seconds to use for polling the status of query results in Athena    | Optional   | `5`                 |
-| aws_profile_name| Profile to use from your AWS shared credentials file.                           | Optional   | `my-profile`        |
-| work_group| Identifier of Athena workgroup   | Optional   | `my-custom-workgroup`        |
+| Option          | Description                                                                     | Required?  | Example               |
+|---------------- |-------------------------------------------------------------------------------- |----------- |-----------------------|
+| s3_staging_dir  | S3 location to store Athena query results and metadata                          | Required   | `s3://bucket/dbt/`    |
+| region_name     | AWS region of your Athena instance                                              | Required   | `eu-west-1`           |
+| schema          | Specify the schema (Athena database) to build models into (lowercase **only**)  | Required   | `dbt`                 |
+| database        | Specify the database (Data catalog) to build models into (lowercase **only**)   | Required   | `awsdatacatalog`      |
+| poll_interval   | Interval in seconds to use for polling the status of query results in Athena    | Optional   | `5`                   |
+| aws_profile_name| Profile to use from your AWS shared credentials file.                           | Optional   | `my-profile`          |
+| work_group      | Identifier of Athena workgroup                                                  | Optional   | `my-custom-workgroup` |
 | num_retries| Number of times to retry a failing query | Optional  | `3`  | `5`
+
 
 **Example profiles.yml entry:**
 ```yaml
