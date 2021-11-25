@@ -13,6 +13,18 @@
 
 {% macro incremental_insert(tmp_relation, target_relation, statement_name="main") %}
     {%- set dest_columns = adapter.get_columns_in_relation(target_relation) -%}
+    {%- set tmp_columns = adapter.get_columns_in_relation(tmp_relation) -%}
+    {%- set dest_column_names = dest_columns | map(attribute='quoted') | list -%}
+    {%- set tmp_columns_names = tmp_columns | map(attribute='quoted') | list -%}
+    {% if dest_column_names != tmp_columns_names %}
+        {% set columns_mismatch_err_msg -%}
+            Schema for incremental model does not match schema for the destination table {{target_relation}}:
+            Incremental model schema : {{ tmp_columns_names }}
+            Destination table schema: {{ dest_column_names }}
+            Please update the destination table schema!
+        {%- endset %}
+        {% do exceptions.raise_not_implemented(columns_mismatch_err_msg) %}
+    {% endif %}
     {%- set dest_cols_csv = dest_columns | map(attribute='quoted') | join(', ') -%}
 
     insert into {{ target_relation }} ({{ dest_cols_csv }})
@@ -69,7 +81,8 @@
   {% set partitioned_by = config.get('partitioned_by', default=none) %}
   {% set target_relation = this.incorporate(type='table') %}
   {% set existing_relation = load_relation(this) %}
-  {% set tmp_relation = make_temp_relation(this) %}
+  {% set temp_table_suffix = adapter.unique_temp_table_suffix() %}
+  {% set tmp_relation = make_temp_relation(this, suffix=temp_table_suffix) %}
 
   {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
@@ -83,7 +96,7 @@
       {% do adapter.drop_relation(existing_relation) %}
       {% set build_sql = create_table_as(False, target_relation, sql) %}
   {% elif partitioned_by is not none and strategy == 'insert_overwrite' %}
-      {% set tmp_relation = make_temp_relation(target_relation) %}
+      {% set tmp_relation = make_temp_relation(target_relation, suffix=temp_table_suffix) %}
       {% if tmp_relation is not none %}
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
@@ -92,7 +105,7 @@
       {% set build_sql = incremental_insert(tmp_relation, target_relation) %}
       {% do to_drop.append(tmp_relation) %}
   {% else %}
-      {% set tmp_relation = make_temp_relation(target_relation) %}
+      {% set tmp_relation = make_temp_relation(target_relation, suffix=temp_table_suffix) %}
       {% if tmp_relation is not none %}
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
