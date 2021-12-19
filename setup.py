@@ -54,6 +54,7 @@ setup(
         "dbt": [
             "include/athena/dbt_project.yml",
             "include/athena/sample_profiles.yml",
+            "include/athena/profile_template.yml",
             "include/athena/macros/*.sql",
             "include/athena/macros/*/*.sql",
         ]
