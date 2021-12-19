@@ -8,7 +8,8 @@ from dbt.adapters.base import available
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
 from dbt.adapters.athena.relation import AthenaRelation
-from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.events import AdapterLogger
+logger = AdapterLogger("Athena")
 
 class AthenaAdapter(SQLAdapter):
     ConnectionManager = AthenaConnectionManager
@@ -96,4 +97,3 @@ class AthenaAdapter(SQLAdapter):
                 s3_resource = boto3.resource('s3', region_name=client.region_name)
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
-
