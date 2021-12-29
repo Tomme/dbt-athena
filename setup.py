@@ -50,15 +50,7 @@ setup(
     author_email="tomelvey@googlemail.com",
     url="https://github.com/Tomme/dbt-athena",
     packages=find_namespace_packages(include=["dbt", "dbt.*"]),
-    package_data={
-        "dbt": [
-            "include/athena/dbt_project.yml",
-            "include/athena/sample_profiles.yml",
-            "include/athena/profile_template.yml",
-            "include/athena/macros/*.sql",
-            "include/athena/macros/*/*.sql",
-        ]
-    },
+    include_package_data=True,
     install_requires=[
         "dbt-core~=1.0.0",
         "pyathena==2.2.0",
