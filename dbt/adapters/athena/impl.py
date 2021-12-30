@@ -3,6 +3,7 @@ import agate
 import re
 import boto3
 from botocore.exceptions import ClientError
+from typing import Optional
 
 from dbt.adapters.base import available
 from dbt.adapters.sql import SQLAdapter
@@ -97,3 +98,9 @@ class AthenaAdapter(SQLAdapter):
                 s3_resource = boto3.resource('s3', region_name=client.region_name)
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
+
+    @available
+    def quote_seed_column(
+        self, column: str, quote_config: Optional[bool]
+    ) -> str:
+        return super().quote_seed_column(column, False)
