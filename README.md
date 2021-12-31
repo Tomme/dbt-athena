@@ -92,7 +92,7 @@ _Additional information_
   * The data format for the table
   * Supports `ORC`, `PARQUET`, `AVRO`, `JSON`, or `TEXTFILE`
 * `write_compression` (`default=none`)
-  * The compression type to use for any storage format that allows compression to be specified. To see which are available, check out [CREATE TABLE AS][create-table-as]
+  * The compression type to use for any storage format that allows compression to be specified. To see which options are available, check out [CREATE TABLE AS][create-table-as]
 * `field_delimiter` (`default=none`)
   * Custom field delimiter, for when format is set to `TEXTFILE`
   
