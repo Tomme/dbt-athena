@@ -34,10 +34,10 @@
       {%- if field_delimiter is not none %}
         field_delimiter='{{ field_delimiter }}',
       {%- endif %}
-        format='{{ format }}'
       {%- if write_compression is not none %}
         write_compression='{{ write_compression }}',
       {%- endif %}
+        format='{{ format }}'
     )
   as
     {{ sql }}
