@@ -3,7 +3,6 @@ from typing import List
 from uuid import uuid4
 
 import agate
-import boto3
 from botocore.exceptions import ClientError
 from dbt.adapters.athena import AthenaConnectionManager
 from dbt.adapters.athena.relation import AthenaRelation
@@ -57,7 +56,7 @@ class AthenaAdapter(SQLAdapter):
             logger.debug("Get relations through Glue API")
             conn = self.connections.get_thread_connection()
             client = conn.handle
-            glue_client = boto3.client("glue", region_name=client.region_name)
+            glue_client = client.session.client("glue")
             paginator = glue_client.get_paginator("get_tables")
             page_iterator = paginator.paginate(DatabaseName=schema_relation.schema, MaxResults=50)
             for page in page_iterator:
@@ -93,9 +92,8 @@ class AthenaAdapter(SQLAdapter):
         # Look up Glue partitions & clean up
         conn = self.connections.get_thread_connection()
         client = conn.handle
-
-        glue_client = boto3.client("glue", region_name=client.region_name)
-        s3_resource = boto3.resource("s3", region_name=client.region_name)
+        glue_client = client.session.client("glue")
+        s3_resource = client.session.resource("s3", region_name=client.region_name)
         partitions = glue_client.get_partitions(
             # CatalogId='123456789012', # Need to make this configurable if it is different from default AWS Account ID
             DatabaseName=database_name,
@@ -121,7 +119,8 @@ class AthenaAdapter(SQLAdapter):
         # Look up Glue partitions & clean up
         conn = self.connections.get_thread_connection()
         client = conn.handle
-        glue_client = boto3.client("glue", region_name=client.region_name)
+        glue_client = client.session.client("glue")
+
         try:
             table = glue_client.get_table(DatabaseName=database_name, Name=table_name)
         except ClientError as e:
@@ -136,6 +135,7 @@ class AthenaAdapter(SQLAdapter):
             if m is not None:
                 bucket_name = m.group(1)
                 prefix = m.group(2)
-                s3_resource = boto3.resource("s3", region_name=client.region_name)
+
+                s3_resource = client.session.resource("s3")
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
