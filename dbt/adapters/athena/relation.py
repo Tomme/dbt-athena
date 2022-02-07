@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict
 
 from dbt.adapters.base.relation import BaseRelation, Policy
 
@@ -14,3 +15,4 @@ class AthenaIncludePolicy(Policy):
 class AthenaRelation(BaseRelation):
     quote_character: str = ""
     include_policy: Policy = AthenaIncludePolicy()
+    column_information: Dict[str, str] = field(default_factory=dict)
