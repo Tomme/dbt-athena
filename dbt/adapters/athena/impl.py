@@ -54,8 +54,11 @@ class AthenaAdapter(SQLAdapter):
         # results has a 4-tuple, schema(database_name),table_name, schema_name,
         relations = []
         try:
-            athena_client = boto3.client("glue")
-            paginator = athena_client.get_paginator("get_tables")
+            logger.debug("Get relations through Glue API")
+            conn = self.connections.get_thread_connection()
+            client = conn.handle
+            glue_client = boto3.client("glue", region_name=client.region_name)
+            paginator = glue_client.get_paginator("get_tables")
             page_iterator = paginator.paginate(DatabaseName=schema_relation.schema, MaxResults=50)
             for page in page_iterator:
                 for table in page["TableList"]:
@@ -77,20 +80,6 @@ class AthenaAdapter(SQLAdapter):
             )
             # Fallback to SQL query
             return super().list_relations_without_caching(schema_relation)
-            # rows = self.execute_macro("list_relations_without_caching", kwargs={"schema_relation": schema_relation})
-            # for row in rows:
-            #     if len(row) != 4:
-            #         raise dbt.exceptions.RuntimeException(
-            #             f'Invalid value from "list_relations_without_caching" macro, got {len(row)} values, expected 4'
-            #         )
-            #     relation = self.Relation.create(
-            #         database=row[0],
-            #         identifier=row[1],
-            #         schema=row[2],
-            #         type=RelationType.View if row[3] == "view" else RelationType.Table,
-            #     )
-            #     relations.append(relation)
-
 
     @available
     def s3_uuid_table_location(self):
