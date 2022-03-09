@@ -142,3 +142,6 @@ cython_debug/
 
 # Project specific
 test.py
+
+# pyenv
+.python-version
