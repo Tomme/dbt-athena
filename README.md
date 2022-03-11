@@ -1,6 +1,6 @@
 # dbt-athena
 
-* Supports dbt version `0.21.0`
+* Supports dbt version `1.0.*`
 * Supports [Seeds][seeds]
 * Correctly detects views and their columns
 * Support [incremental models][incremental]
@@ -126,7 +126,7 @@ The following features of dbt are not implemented on Athena:
         - name: first_table
           identifier: "first table"       # Not like that
         - name: second_table
-          idenfitier: "\"second table\""  # Like this
+          identifier: "\"second table\""  # Like this
   ```
 
 * Tables, schemas and database should only be lowercase
