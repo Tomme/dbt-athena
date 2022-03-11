@@ -23,9 +23,6 @@
     {{ create_view_as(target_relation, sql) }}
   {%- endcall %}
 
-  -- set table properties
-  {{ set_table_classification(target_relation, 'view') }}
-
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
   {{ adapter.commit() }}
@@ -38,13 +35,3 @@
   {{ return({'relations': [target_relation]}) }}
 
 {% endmacro %}
-
-
-{% materialization view, adapter='athena' -%}
-    {% set to_return = create_or_replace_view(run_outside_transaction_hooks=False) %}
-
-    {% set target_relation = this.incorporate(type='view') %}
-    {% do persist_docs(target_relation, model) %}
-
-    {% do return(to_return) %}
-{%- endmaterialization %}

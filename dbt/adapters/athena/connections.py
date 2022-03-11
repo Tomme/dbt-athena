@@ -20,11 +20,14 @@ from dbt.adapters.base import Credentials
 from dbt.contracts.connection import Connection, AdapterResponse
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.exceptions import RuntimeException, FailedToConnectException
-from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.events import AdapterLogger
+
 import tenacity
 from tenacity.retry import retry_if_exception
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_exponential
+
+logger = AdapterLogger("Athena")
 
 
 @dataclass
@@ -32,6 +35,7 @@ class AthenaCredentials(Credentials):
     s3_staging_dir: str
     region_name: str
     schema: str
+    endpoint_url: Optional[str] = None
     work_group: Optional[str] = None
     aws_profile_name: Optional[str] = None
     poll_interval: float = 1.0
@@ -47,7 +51,7 @@ class AthenaCredentials(Credentials):
         return self.host
 
     def _connection_keys(self) -> Tuple[str, ...]:
-        return "s3_staging_dir", "work_group", "region_name", "database", "schema", "poll_interval", "aws_profile_name"
+        return "s3_staging_dir", "work_group", "region_name", "database", "schema", "poll_interval", "aws_profile_name", "endpoing_url"
 
 
 class AthenaCursor(Cursor):
@@ -71,6 +75,7 @@ class AthenaCursor(Cursor):
         parameters: Optional[Dict[str, Any]] = None,
         work_group: Optional[str] = None,
         s3_staging_dir: Optional[str] = None,
+        endpoint_url: Optional[str] = None,
         cache_size: int = 0,
         cache_expiration_time: int = 0,
     ):
@@ -134,6 +139,7 @@ class AthenaConnectionManager(SQLConnectionManager):
 
             handle = AthenaConnection(
                 s3_staging_dir=creds.s3_staging_dir,
+                endpoint_url=creds.endpoint_url,
                 region_name=creds.region_name,
                 schema_name=creds.schema,
                 work_group=creds.work_group,

@@ -3,12 +3,17 @@ import agate
 import re
 import boto3
 from botocore.exceptions import ClientError
+from typing import Optional
+from threading import Lock
 
 from dbt.adapters.base import available
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
 from dbt.adapters.athena.relation import AthenaRelation
-from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.events import AdapterLogger
+logger = AdapterLogger("Athena")
+
+boto3_client_lock = Lock()
 
 class AthenaAdapter(SQLAdapter):
     ConnectionManager = AthenaConnectionManager
@@ -50,7 +55,8 @@ class AthenaAdapter(SQLAdapter):
         conn = self.connections.get_thread_connection()
         client = conn.handle
 
-        glue_client = boto3.client('glue', region_name=client.region_name)
+        with boto3_client_lock:
+            glue_client = boto3.client('glue', region_name=client.region_name)
         s3_resource = boto3.resource('s3', region_name=client.region_name)
         partitions = glue_client.get_partitions(
             # CatalogId='123456789012', # Need to make this configurable if it is different from default AWS Account ID
@@ -75,7 +81,8 @@ class AthenaAdapter(SQLAdapter):
         # Look up Glue partitions & clean up
         conn = self.connections.get_thread_connection()
         client = conn.handle
-        glue_client = boto3.client('glue', region_name=client.region_name)
+        with boto3_client_lock:
+            glue_client = boto3.client('glue', region_name=client.region_name)
         try:
             table = glue_client.get_table(
                 DatabaseName=database_name,
@@ -97,3 +104,8 @@ class AthenaAdapter(SQLAdapter):
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
 
+    @available
+    def quote_seed_column(
+        self, column: str, quote_config: Optional[bool]
+    ) -> str:
+        return super().quote_seed_column(column, False)
