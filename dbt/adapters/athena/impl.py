@@ -21,8 +21,6 @@ from dbt.events import AdapterLogger
 
 logger = AdapterLogger("Athena")
 
-boto3_client_lock = Lock()
-
 
 class AthenaAdapter(SQLAdapter):
     ConnectionManager = AthenaConnectionManager
