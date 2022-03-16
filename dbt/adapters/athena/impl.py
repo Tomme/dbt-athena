@@ -18,7 +18,6 @@ from dbt.clients.agate_helper import table_from_rows
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.relation import RelationType
 from dbt.events import AdapterLogger
-from dbt.logger import GLOBAL_LOGGER as logger
 
 logger = AdapterLogger("Athena")
 
@@ -104,7 +103,6 @@ class AthenaAdapter(SQLAdapter):
                         self._create_stats_dict("compressed", descriptor["Compressed"], "Table has compressed or not")
                     )
                     rows.append(row)
-                    logger.debug("{}", row)
 
             if not rows:
                 return table_from_rows([])  # Return empty table
@@ -115,7 +113,6 @@ class AthenaAdapter(SQLAdapter):
                 column_names,
                 text_only_columns=["table_database", "table_schema", "table_name"],
             )
-            logger.debug("{}", table)
             return self._catalog_filter_table(table, manifest)
         except ClientError as e:
             logger.warning(
