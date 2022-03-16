@@ -1,6 +1,5 @@
 {% macro athena__create_table_as(temporary, relation, sql) -%}
-  {%- set model_path = model.path -%}
-  {%- set split_model_path = model_path.split('/') -%}
+  {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
   {%- set database_name = split_model_path[1] -%}
   {%- set table_name = split_model_path[-1].split('.')[0] -%}
