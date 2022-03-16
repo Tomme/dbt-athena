@@ -1,7 +1,8 @@
 import itertools
 import re
 from email.quoprimime import quote
-from typing import List, Set
+from threading import Lock
+from typing import List, Optional, Set
 from uuid import uuid4
 
 import agate
@@ -16,7 +17,12 @@ from dbt.adapters.sql import SQLAdapter
 from dbt.clients.agate_helper import table_from_rows
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.relation import RelationType
+from dbt.events import AdapterLogger
 from dbt.logger import GLOBAL_LOGGER as logger
+
+logger = AdapterLogger("Athena")
+
+boto3_client_lock = Lock()
 
 
 class AthenaAdapter(SQLAdapter):
@@ -251,3 +257,7 @@ class AthenaAdapter(SQLAdapter):
             return RelationType.Table
         else:
             raise dbt.exceptions.RuntimeException(f'Unknown table type {table["TableType"]} for {table["Name"]}')
+
+    @available
+    def quote_seed_column(self, column: str, quote_config: Optional[bool]) -> str:
+        return super().quote_seed_column(column, False)
