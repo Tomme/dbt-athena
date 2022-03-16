@@ -115,7 +115,7 @@ class AthenaAdapter(SQLAdapter):
             )
             return self._catalog_filter_table(table, manifest)
         except ClientError as e:
-            logger.warning(
+            logger.debug(
                 "Boto3 Error while retrieving catalog. Fallback into SQL execution: code={}, message={}",
                 e.response["Error"]["Code"],
                 e.response["Error"].get("Message"),
@@ -151,7 +151,7 @@ class AthenaAdapter(SQLAdapter):
                 relations.append(relation)
             return relations
         except ClientError as e:
-            logger.warning(
+            logger.debug(
                 "Boto3 Error while retrieving relations. Fallback into SQL execution: code={}, message={}",
                 e.response["Error"]["Code"],
                 e.response["Error"].get("Message"),
