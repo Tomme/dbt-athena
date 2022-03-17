@@ -4,8 +4,16 @@
   {%- set database_name = split_model_path[1] -%}
   {%- set table_name = split_model_path[-1].split('.')[0] -%}
   {%- set extraction_timestamp = run_started_at.strftime("%Y-%m-%d %H:%M:%S") -%}
-  {%- set default_external_location = 's3://mojap-derived-tables/domain=' + domain_name + '/database=' + database_name + '/table=' + table_name + '/extraction_timestamp=' + extraction_timestamp + '/' -%}
-  {%- set external_location = config.get('external_location', default=default_external_location) -%}
+  {%-
+    set default_external_location = 's3://mojap-derived-tables/domain='
+    + domain_name + '/database=' + database_name + '/table=' + table_name
+    + '/extraction_timestamp=' + extraction_timestamp + '/'
+  -%}
+  {%-
+    set external_location = config.get(
+      'external_location', default=default_external_location
+    )
+  -%}
   {%- set partitioned_by = config.get('partitioned_by', default=none) -%}
   {%- set bucketed_by = config.get('bucketed_by', default=none) -%}
   {%- set bucket_count = config.get('bucket_count', default=none) -%}
