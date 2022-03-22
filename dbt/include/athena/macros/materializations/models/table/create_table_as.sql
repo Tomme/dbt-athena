@@ -2,7 +2,8 @@
   {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
   {%- set database_name = split_model_path[1] -%}
-  {%- set table_name = split_model_path[-1].split('.')[0] -%}
+  {%- set file_name = split_model_path[-1].split('.')[0] -%}
+  {%- set table_name = file_name.split('__')[-1] -%}
   {%- set extraction_timestamp = run_started_at.strftime("%Y-%m-%d %H:%M:%S") -%}
   {%-
     set default_external_location = 's3://mojap-derived-tables/domain='
