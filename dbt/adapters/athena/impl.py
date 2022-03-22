@@ -100,7 +100,7 @@ class AthenaAdapter(SQLAdapter):
             if m is not None:
                 bucket_name = m.group(1)
                 prefix = m.group(2)
-                    s3_resource = boto3.resource("s3", region_name=client.region_name)
+                s3_resource = boto3.resource("s3", region_name=client.region_name)
                 s3_bucket = s3_resource.Bucket(bucket_name)
                 s3_bucket.objects.filter(Prefix=prefix).delete()
 
