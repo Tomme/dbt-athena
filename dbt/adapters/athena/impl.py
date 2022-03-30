@@ -3,14 +3,21 @@ import agate
 import re
 import boto3
 from botocore.exceptions import ClientError
-from typing import Optional
+from concurrent.futures import Future
+from itertools import chain
 from threading import Lock
+from typing import Iterator, List, Optional, Tuple
 
 from dbt.adapters.base import available
+from dbt.adapters.base.impl import catch_as_completed
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
-from dbt.adapters.athena.relation import AthenaRelation
+from dbt.adapters.athena.relation import AthenaRelation, AthenaSchemaSearchMap
+from dbt.contracts.graph.manifest import Manifest
 from dbt.events import AdapterLogger
+from dbt.utils import executor
+from dbt.contracts.graph.compiled import CompileResultNode
+
 logger = AdapterLogger("Athena")
 
 boto3_client_lock = Lock()
@@ -109,3 +116,16 @@ class AthenaAdapter(SQLAdapter):
         self, column: str, quote_config: Optional[bool]
     ) -> str:
         return super().quote_seed_column(column, False)
+
+    def _get_catalog_schemas(self, manifest: Manifest) -> AthenaSchemaSearchMap:
+        info_schema_name_map = AthenaSchemaSearchMap()
+        nodes: Iterator[CompileResultNode] = chain(
+            [node for node in manifest.nodes.values() if (
+                node.is_relational and not node.is_ephemeral_model
+            )],
+            manifest.sources.values(),
+        )
+        for node in nodes:
+            relation = self.Relation.create_from(self.config, node)
+            info_schema_name_map.add(relation)
+        return info_schema_name_map
