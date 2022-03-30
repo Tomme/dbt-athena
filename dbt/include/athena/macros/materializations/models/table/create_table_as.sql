@@ -6,8 +6,8 @@
   {%- set table_name = file_name.split('__')[-1] -%}
   {%- set extraction_timestamp = run_started_at.strftime("%Y-%m-%d %H:%M:%S") -%}
   {%-
-    set default_external_location = 's3://mojap-derived-tables/domain='
-    + domain_name + '/database=' + database_name + '/table=' + table_name
+    set default_external_location = 's3://mojap-derived-tables/domain_name='
+    + domain_name + '/database_name=' + database_name + '/table_name=' + table_name
     + '/extraction_timestamp=' + extraction_timestamp + '/'
   -%}
   {%-
