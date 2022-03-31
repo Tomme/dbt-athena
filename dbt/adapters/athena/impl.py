@@ -54,7 +54,6 @@ class AthenaAdapter(SQLAdapter):
 
         glue_client = boto3.client('glue', region_name=client.region_name)
         s3_resource = boto3.resource('s3', region_name=client.region_name)
-        nextToken = None
         partitions = []
         paginator = glue_client.get_paginator('get_partitions')
         partition_params = {'DatabaseName': database_name, 'TableName': table_name, 'Expression': where_condition, 'ExcludeColumnSchema': True}
