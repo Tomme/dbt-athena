@@ -58,7 +58,6 @@ class AthenaAdapter(SQLAdapter):
         with boto3_client_lock:
             glue_client = boto3.client('glue', region_name=client.region_name)
         s3_resource = boto3.resource('s3', region_name=client.region_name)
-        partitions = []
         paginator = glue_client.get_paginator("get_partitions")
         partition_params = {
             "DatabaseName": database_name,
@@ -71,7 +70,6 @@ class AthenaAdapter(SQLAdapter):
         for pg in partition_pg:
             partitions.extend(pg["Partitions"])
         p = re.compile("s3://([^/]*)/(.*)")
-
         for partition in partitions:
             logger.debug("Deleting objects for partition '{}' at '{}'", partition["Values"], partition["StorageDescriptor"]["Location"])
             m = p.match(partition["StorageDescriptor"]["Location"])
