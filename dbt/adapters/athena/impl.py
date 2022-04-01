@@ -72,7 +72,7 @@ class AthenaAdapter(SQLAdapter):
             partitions.extend(pg["Partitions"])
         p = re.compile("s3://([^/]*)/(.*)")
 
-        for partition in partitions["Partitions"]:
+        for partition in partitions:
             logger.debug("Deleting objects for partition '{}' at '{}'", partition["Values"], partition["StorageDescriptor"]["Location"])
             m = p.match(partition["StorageDescriptor"]["Location"])
             if m is not None:
