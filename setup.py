@@ -53,7 +53,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "dbt-core==1.0.4",
-        "pyathena==2.4.1",
+        "pyathena==2.4.0",
         "boto3>=1.18.12",
         "tenacity>=6.3.1",
     ]
