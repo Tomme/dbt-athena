@@ -4,7 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 from itertools import chain
 from threading import Lock
-from typing import Dict, Iterator, Optional, Set
+from typing import Dict, Iterator, List, Optional, Set
 from uuid import uuid4
 
 from dbt.adapters.base import available
@@ -147,3 +147,47 @@ class AthenaAdapter(SQLAdapter):
             relation = self.Relation.create_from(self.config, node)
             info_schema_name_map.add(relation)
         return info_schema_name_map
+
+    def list_relations_without_caching(
+        self, schema_relation: AthenaRelation,
+    ) -> List[AthenaRelation]:
+        # As I have no idea how this will work with alternative Glue Catalogs or Athena Data sources,
+        # I'm just going to pass through the old method for anything that's not `awsdatacatalog`
+        if schema_relation.database != 'awsdatacatalog':
+            return super().list_relations_without_caching(schema_relation)
+
+        conn = self.connections.get_thread_connection()
+        client = conn.handle
+        with boto3_client_lock:
+            glue_client = boto3.client('glue', region_name=client.region_name)
+        
+        paginator = glue_client.get_paginator('get_tables')
+        page_iterator = paginator.paginate(
+            DatabaseName=schema_relation.schema,   
+        )
+
+        relations = []
+        quote_policy = {
+            'database': True,
+            'schema': True,
+            'identifier': True
+        }
+
+        for page in page_iterator:
+            tables = page['TableList']
+            for table in tables:
+                _type = table['TableType']
+                if _type == 'VIRTUAL_VIEW':
+                    _type = self.Relation.View
+                else:
+                    _type = self.Relation.Table
+
+                relations.append(self.Relation.create(
+                    schema=table['DatabaseName'],
+                    database=schema_relation.database,
+                    identifier=table['Name'],
+                    quote_policy=quote_policy,
+                    type=_type,
+                ))
+
+        return relations
