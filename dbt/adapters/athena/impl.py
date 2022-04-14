@@ -68,7 +68,8 @@ class AthenaAdapter(SQLAdapter):
                     schema=schema_relation.schema,
                     quote_policy=quote_policy,
                     type=rel_type,
-                    column_information=table["StorageDescriptor"]["Columns"],
+                    # StorageDescriptor.Columns doesn't include columns used as partition key
+                    column_information=table["StorageDescriptor"]["Columns"] + table["PartitionKeys"],
                 )
                 relations.append(relation)
             return relations
