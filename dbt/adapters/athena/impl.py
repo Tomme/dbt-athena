@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from dbt.adapters.base import available
 from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
-from dbt.adapters.base.relation import InformationSchema
+from dbt.adapters.base.relation import BaseRelation, InformationSchema
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
 from dbt.adapters.athena.relation import AthenaRelation, AthenaSchemaSearchMap
@@ -159,7 +159,7 @@ class AthenaAdapter(SQLAdapter):
 
     def list_relations_without_caching(
         self, schema_relation: AthenaRelation,
-    ) -> List[AthenaRelation]:
+    ) -> List[BaseRelation]:
         catalog_id = None
         if schema_relation.database.lower() != 'awsdatacatalog':
             data_catalog = self._get_data_catalog(schema_relation.database.lower())
