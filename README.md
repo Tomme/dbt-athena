@@ -112,6 +112,12 @@ Due to the nature of AWS Athena, not all core dbt functionality is supported.
 The following features of dbt are not implemented on Athena:
 * Snapshots
 
+### Recommended dbt Packages
+
+[dbt_utils](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/) is a useful package that provides a series of configurable tests and macros to streamline development.
+
+If using the [dbt_utils](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/) package, it is also recommended to also install [athena_utils](https://hub.getdbt.com/lalalilo/athena_utils/latest/) which provides Athena support for various cross-database functions.
+
 #### Known issues
 
 * Quoting is not currently supported
