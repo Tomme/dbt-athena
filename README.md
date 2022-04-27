@@ -73,6 +73,38 @@ _Additional information_
 
 ### Usage notes
 
+**Zero-Downtime Tables**
+Starting from adapter version `1.0.3` there is a way to do `dbt run` without downtime on table update  
+It works in the following way:  
+1. Enable zero-downtime for tables   
+a) Add var `table_zero_downtime` to the `dbt_project.yml`  
+```
+vars:
+  table_zero_downtime: true
+```
+b) Alternatively add tag `table_zero_downtime` to the specific model with `table` materialization  
+```
+{{config(tags=['table_zero_downtime'])}}
+```
+2. Create a companion view for your table  
+a) It's usually is very simple like `select * from {{ref('table_model')}}`  
+b) Move all tests to a companion view, since tests on the table are not working properly in all cases  
+c) Documentation for the table will not have columns, but everything will be fine with created view  
+  
+3. Cleaning up stale objects like ctas
+a) We've added a complimentary set of macroses to cleanup objects that not exist in Git
+Checkout these links:
+- https://github.com/SOVALINUX/dbt-utils/blob/main/macros/sql/delete_stale_objects.sql
+- https://github.com/SOVALINUX/athena-utils/blob/main/macros/dbt_utils/sql/delete_stale_objects.sql
+And `on-run-end` hook I can do the following trick:
+```
+on-run-end: "{% do athena_utils.delete_stale_ctas_run_end([target.schema, generate_schema_name('some_extra_schema', '')], False, '') %}"
+```
+
+### Notes on Docker
+If you ever going to add this connector to the Docker, please use Dockerfile from dbt v1.1 or higher
+https://github.com/dbt-labs/dbt-core/blob/1.1.latest/docker/Dockerfile
+
 ### Models
 
 #### Table Configuration
