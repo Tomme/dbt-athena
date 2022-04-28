@@ -1,3 +1,4 @@
+import time
 from typing import ContextManager, Tuple, Optional, List, Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -38,6 +39,8 @@ class AthenaCredentials(Credentials):
     endpoint_url: Optional[str] = None
     work_group: Optional[str] = None
     aws_profile_name: Optional[str] = None
+    aws_role_arn: Optional[str] = None,
+    aws_role_session_name: str = f"dbt-athena-session-{int(time.time())}",
     poll_interval: float = 1.0
     _ALIASES = {"catalog": "database"}
     num_retries: Optional[int] = 5
@@ -147,6 +150,8 @@ class AthenaConnectionManager(SQLConnectionManager):
                 formatter=AthenaParameterFormatter(),
                 poll_interval=creds.poll_interval,
                 profile_name=creds.aws_profile_name,
+                role_arn=creds.aws_role_arn,
+                role_session_name=creds.aws_role_session_name,
                 retry_config=RetryConfig(
                     attempt=creds.num_retries,
                     exceptions=(

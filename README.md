@@ -29,6 +29,7 @@ WITH DBPROPERTIES ('creator'='Foo Bar', 'email'='foo@bar.com');
 ```
 
 Notes:
+
 - Take note of your AWS region code (e.g. `us-west-2` or `eu-west-2`, etc.).
 - You can also use [AWS Glue](https://docs.aws.amazon.com/athena/latest/ug/glue-athena.html) to create and manage Athena databases.
 
@@ -49,10 +50,14 @@ A dbt profile can be configured to run against AWS Athena using the following co
 | database        | Specify the database (Data catalog) to build models into (lowercase **only**)   | Required   | `awsdatacatalog`    |
 | poll_interval   | Interval in seconds to use for polling the status of query results in Athena    | Optional   | `5`                 |
 | aws_profile_name| Profile to use from your AWS shared credentials file.                           | Optional   | `my-profile`        |
+| aws_role_arn| IAM role with sufficient permissions.   | Optional   | `my-custom-iam-role`        |
 | work_group| Identifier of Athena workgroup   | Optional   | `my-custom-workgroup`        |
 | num_retries| Number of times to retry a failing query | Optional  | `3`  | `5`
 
+**NOTE**: Only one out of `aws_profile_name` or `aws_role_arn` needs to be passed. If you pass `aws_role_arn` and `aws_profile_name`, `aws_role_arn` will be used and `aws_profile_name` will be ignored.
+
 **Example profiles.yml entry:**
+
 ```yaml
 athena:
   target: dev
@@ -64,6 +69,7 @@ athena:
       schema: dbt
       database: awsdatacatalog
       aws_profile_name: my-profile
+      aws_role_arn: my-custom-iam-role
       work_group: my-workgroup
 ```
 
@@ -95,7 +101,7 @@ _Additional information_
   * The compression type to use for any storage format that allows compression to be specified. To see which options are available, check out [CREATE TABLE AS][create-table-as]
 * `field_delimiter` (`default=none`)
   * Custom field delimiter, for when format is set to `TEXTFILE`
-  
+
 More information: [CREATE TABLE AS][create-table-as]
 
 [run_started_at]: https://docs.getdbt.com/reference/dbt-jinja-functions/run_started_at
@@ -116,7 +122,7 @@ The following features of dbt are not implemented on Athena:
 
 * Quoting is not currently supported
   * If you need to quote your sources, escape the quote characters in your source definitions:
-  
+
   ```yaml
   version: 2
 
@@ -149,12 +155,12 @@ make run_tests
 
 ### Community
 
-* [fishtown-analytics/dbt][fishtown-analytics/dbt]
-* [fishtown-analytics/dbt-presto][fishtown-analytics/dbt-presto]
-* [Dandandan/dbt-athena][Dandandan/dbt-athena]
-* [laughingman7743/PyAthena][laughingman7743/PyAthena]
+- [fishtown-analytics/dbt][fishtown-analytics/dbt]
+- [fishtown-analytics/dbt-presto][fishtown-analytics/dbt-presto]
+- [Dandandan/dbt-athena][dandandan/dbt-athena]
+- [laughingman7743/PyAthena][laughingman7743/pyathena]
 
 [fishtown-analytics/dbt]: https://github.com/fishtown-analytics/dbt
 [fishtown-analytics/dbt-presto]: https://github.com/fishtown-analytics/dbt-presto
-[Dandandan/dbt-athena]: https://github.com/Dandandan/dbt-athena
-[laughingman7743/PyAthena]: https://github.com/laughingman7743/PyAthena
+[dandandan/dbt-athena]: https://github.com/Dandandan/dbt-athena
+[laughingman7743/pyathena]: https://github.com/laughingman7743/PyAthena
