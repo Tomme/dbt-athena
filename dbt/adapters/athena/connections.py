@@ -1,4 +1,8 @@
 import time
+
+import boto3
+from boto3.session import Session
+
 from typing import ContextManager, Tuple, Optional, List, Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -52,6 +56,31 @@ class AthenaCredentials(Credentials):
     @property
     def unique_field(self):
         return self.host
+
+    def _get_session(
+        self,
+        role_arn: str,
+        role_session_name: str,
+        duration_seconds: int = 3600,
+    ) -> Session:
+        sts_client = boto3.client("sts")
+        response = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName=role_session_name,
+            DurationSeconds=duration_seconds,
+        )
+        creds: Dict[str, Any] = response["Credentials"]
+        session = Session(
+            aws_access_key_id=creds["AccessKeyId"],
+            aws_secret_access_key=creds["SecretAccessKey"],
+            aws_session_token=creds["SessionToken"],
+        )
+        return session
+
+    @property
+    def session(self) -> Session:
+        if self.aws_role_arn:
+            return self._get_session(self.aws_role_arn, self.aws_role_session_name)
 
     def _connection_keys(self) -> Tuple[str, ...]:
         return ("s3_staging_dir", "work_group", "region_name", "database", "schema",
@@ -151,8 +180,7 @@ class AthenaConnectionManager(SQLConnectionManager):
                 formatter=AthenaParameterFormatter(),
                 poll_interval=creds.poll_interval,
                 profile_name=creds.aws_profile_name,
-                role_arn=creds.aws_role_arn,
-                role_session_name=creds.aws_role_session_name,
+                session=creds.session,
                 retry_config=RetryConfig(
                     attempt=creds.num_retries,
                     exceptions=(
