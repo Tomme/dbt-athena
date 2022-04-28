@@ -39,8 +39,8 @@ class AthenaCredentials(Credentials):
     endpoint_url: Optional[str] = None
     work_group: Optional[str] = None
     aws_profile_name: Optional[str] = None
-    aws_role_arn: Optional[str] = None,
-    aws_role_session_name: str = f"dbt-athena-session-{int(time.time())}",
+    aws_role_arn: Optional[str] = None
+    aws_role_session_name: str = f"dbt-athena-session-{int(time.time())}"
     poll_interval: float = 1.0
     _ALIASES = {"catalog": "database"}
     num_retries: Optional[int] = 5
@@ -54,7 +54,8 @@ class AthenaCredentials(Credentials):
         return self.host
 
     def _connection_keys(self) -> Tuple[str, ...]:
-        return "s3_staging_dir", "work_group", "region_name", "database", "schema", "poll_interval", "aws_profile_name", "endpoing_url"
+        return ("s3_staging_dir", "work_group", "region_name", "database", "schema",
+                "poll_interval", "aws_profile_name", "aws_role_arn", "endpoing_url")
 
 
 class AthenaCursor(Cursor):
