@@ -150,6 +150,7 @@ class AthenaConnectionManager(SQLConnectionManager):
 
             handle = AthenaConnection(
                 s3_staging_dir=creds.s3_staging_dir,
+                s3_data_dir=creds.s3_data_dir,
                 endpoint_url=creds.endpoint_url,
                 region_name=creds.region_name,
                 schema_name=creds.schema,
