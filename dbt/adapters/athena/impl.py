@@ -53,7 +53,7 @@ class AthenaAdapter(SQLAdapter):
         run_time: Optional[str] = None,
     ) -> str:
         conn = self.connections.get_thread_connection()
-        client = conn.handle
+        client = conn.credentials
 
         if run_time is None:
             return (
