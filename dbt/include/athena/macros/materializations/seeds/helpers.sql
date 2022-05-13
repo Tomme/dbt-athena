@@ -18,6 +18,7 @@
     {%- set env_name = "dev" -%}
   {%- else -%}
     {%- set env_name = "prod" -%}
+  {%- endif -%}
   {%- set file_name = split_model_path[-1].split('.')[0] -%}
   {%- set table_name = file_name.split('__')[-1] -%}
   {%- set run_time = run_started_at.strftime("%Y-%m-%d %H:%M:%S") -%}
