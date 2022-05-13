@@ -57,12 +57,12 @@ class AthenaAdapter(SQLAdapter):
 
         if run_time is None:
             return (
-                f"{client.s3_data_dir}/env_name={env_name}/domain_name={domain_name}/"
+                f"{client.s3_data_dir}/{env_name}/domain_name={domain_name}/"
                 f"database_name={schema_name}/table_name={table_name}"
             )
         else:
             return (
-                f"{client.s3_data_dir}/env_name={env_name}/domain_name={domain_name}/"
+                f"{client.s3_data_dir}/{env_name}/domain_name={domain_name}/"
                 f"database_name={schema_name}/table_name={table_name}/"
                 f"run_time={run_time}"
             )
