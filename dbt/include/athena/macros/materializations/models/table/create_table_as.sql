@@ -2,7 +2,7 @@
   {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
   {%- set database_name = split_model_path[1] -%}
-  {%- if target.get('profile_name')=='dev' -%}
+  {%- if target.get('target_name')=='dev' -%}
     {%- set env_name = 'dev' -%}
   {%- else -%}
     {%- set env_name = 'prod' -%}
