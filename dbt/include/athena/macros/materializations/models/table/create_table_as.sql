@@ -1,7 +1,8 @@
 {% macro athena__create_table_as(temporary, relation, sql) -%}
   {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
-  {%- set database_name = split_model_path[1] -%}
+  {%- set split_node_name = node.name.split('__') -%}
+  {%- set schema_name = split_node_name[0] -%}
   {%- if target.get('target_name')=='dev' -%}
     {%- set env_name = 'dev' -%}
   {%- else -%}
@@ -14,7 +15,7 @@
     set default_external_location = adapter.generate_s3_data_path(
       env_name,
       domain_name,
-      database_name,
+      schema_name,
       table_name,
       run_time
     )
