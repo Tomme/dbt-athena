@@ -3,7 +3,7 @@
   {%- set domain_name = split_model_path[0] -%}
   {%- if target.get('target_name')=='dev' -%}
     {%- set env_name = 'dev' -%}
-    {%- set database_name = split_model_path[1] + '_' + env_name -%}
+    {%- set database_name = split_model_path[1] + '_dbt_' + env_name -%}
   {%- else -%}
     {%- set env_name = 'prod' -%}
     {%- set database_name = split_model_path[1] -%}
