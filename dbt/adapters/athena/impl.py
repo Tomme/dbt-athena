@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 from itertools import chain
 from threading import Lock
 from typing import Dict, Iterator, Optional, Set
-from uuid import uuid4
 
 from dbt.adapters.base import available
 from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
