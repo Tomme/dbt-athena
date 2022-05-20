@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 from itertools import chain
 from threading import Lock
 from typing import Dict, Iterator, Optional, Set
-from uuid import uuid4
 
 from dbt.adapters.base import available
 from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
@@ -44,11 +43,28 @@ class AthenaAdapter(SQLAdapter):
         return "timestamp"
 
     @available
-    def s3_uuid_table_location(self):
+    def generate_s3_data_path(
+        self,
+        env_name: str,
+        domain_name: str,
+        schema_name: str,
+        table_name: str,
+        run_time: Optional[str] = None,
+    ) -> str:
         conn = self.connections.get_thread_connection()
-        client = conn.handle
+        client = conn.credentials
 
-        return f"{client.s3_staging_dir}tables/{str(uuid4())}/"
+        if run_time is None:
+            return (
+                f"{client.s3_data_dir}/{env_name}/domain_name={domain_name}/"
+                f"database_name={schema_name}/table_name={table_name}"
+            )
+        else:
+            return (
+                f"{client.s3_data_dir}/{env_name}/domain_name={domain_name}/"
+                f"database_name={schema_name}/table_name={table_name}/"
+                f"run_time={run_time}"
+            )
 
     @available
     def clean_up_partitions(
@@ -132,13 +148,14 @@ class AthenaAdapter(SQLAdapter):
         results = self._catalog_filter_table(table, manifest)
         return results
 
-
     def _get_catalog_schemas(self, manifest: Manifest) -> AthenaSchemaSearchMap:
         info_schema_name_map = AthenaSchemaSearchMap()
         nodes: Iterator[CompileResultNode] = chain(
-            [node for node in manifest.nodes.values() if (
-                node.is_relational and not node.is_ephemeral_model
-            )],
+            [
+                node
+                for node in manifest.nodes.values()
+                if (node.is_relational and not node.is_ephemeral_model)
+            ],
             manifest.sources.values(),
         )
         for node in nodes:

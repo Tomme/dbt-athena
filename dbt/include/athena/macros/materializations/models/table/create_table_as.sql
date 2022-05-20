@@ -1,14 +1,24 @@
 {% macro athena__create_table_as(temporary, relation, sql) -%}
   {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
-  {%- set database_name = split_model_path[1] -%}
+  {%- if target.get('target_name')=='dev' -%}
+    {%- set env_name = 'dev' -%}
+    {%- set database_name = split_model_path[1] + '_dbt_' + env_name -%}
+  {%- else -%}
+    {%- set env_name = 'prod' -%}
+    {%- set database_name = split_model_path[1] -%}
+  {%- endif -%}
   {%- set file_name = split_model_path[-1].split('.')[0] -%}
   {%- set table_name = file_name.split('__')[-1] -%}
-  {%- set extraction_timestamp = run_started_at.strftime("%Y-%m-%d %H:%M:%S") -%}
+  {%- set run_time = run_started_at.strftime('%Y-%m-%d %H:%M:%S') -%}
   {%-
-    set default_external_location = 's3://mojap-derived-tables/domain_name='
-    + domain_name + '/database_name=' + database_name + '/table_name=' + table_name
-    + '/extraction_timestamp=' + extraction_timestamp + '/'
+    set default_external_location = adapter.generate_s3_data_path(
+      env_name,
+      domain_name,
+      database_name,
+      table_name,
+      run_time
+    )
   -%}
   {%-
     set external_location = config.get(

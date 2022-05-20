@@ -10,5 +10,5 @@ from dbt.include import athena
 Plugin = AdapterPlugin(
     adapter=AthenaAdapter,
     credentials=AthenaCredentials,
-    include_path=athena.PACKAGE_PATH
+    include_path=athena.PACKAGE_PATH,
 )
