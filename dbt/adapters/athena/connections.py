@@ -143,7 +143,7 @@ class AthenaConnectionManager(SQLConnectionManager):
                 region_name=creds.region_name,
                 schema_name=creds.schema,
                 work_group=creds.work_group,
-                encryption_option="aws:kms",
+                encryption_option="SSE_KMS",
                 kms_key="arn:aws:kms:eu-central-1:254788917140:key/5d874aa2-f3c4-4344-a944-b89e1354d006",
                 cursor_class=AthenaCursor,
                 formatter=AthenaParameterFormatter(),
