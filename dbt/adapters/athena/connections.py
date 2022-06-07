@@ -145,6 +145,7 @@ class AthenaConnectionManager(SQLConnectionManager):
                 work_group=creds.work_group,
                 encryption_option="SSE_KMS",
                 kms_key="arn:aws:kms:eu-central-1:254788917140:key/5d874aa2-f3c4-4344-a944-b89e1354d006",
+                role_arn="arn:aws:iam::254788917140:role/spi-DtEngineAppRole-staging_cloud_os_eu",
                 cursor_class=AthenaCursor,
                 formatter=AthenaParameterFormatter(),
                 poll_interval=creds.poll_interval,
