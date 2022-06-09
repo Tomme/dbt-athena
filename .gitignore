@@ -140,5 +140,8 @@ cython_debug/
 # PyCharm
 .idea/
 
+# VSCode
+.vscode
+
 # Project specific
 test.py
