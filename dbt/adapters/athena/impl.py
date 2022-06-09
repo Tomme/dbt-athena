@@ -16,6 +16,7 @@ from dbt.adapters.athena.relation import AthenaRelation, AthenaSchemaSearchMap
 from dbt.contracts.graph.compiled import CompileResultNode
 from dbt.contracts.graph.manifest import Manifest
 from dbt.events import AdapterLogger
+from dbt.exceptions import raise_compiler_error, invalid_type_error
 logger = AdapterLogger("Athena")
 
 boto3_client_lock = Lock()
@@ -147,3 +148,36 @@ class AthenaAdapter(SQLAdapter):
             relation = self.Relation.create_from(self.config, node)
             info_schema_name_map.add(relation)
         return info_schema_name_map
+
+    @available.parse_none
+    def valid_snapshot_target(self, relation: AthenaRelation) -> None:
+        """
+        Ensure that the target relation is valid, by making sure it has the
+        expected columns.
+
+        :param Relation relation: The relation to check
+        :raises CompilationException: If the columns are incorrect.
+        """
+        if not isinstance(relation, self.Relation):
+            invalid_type_error(
+                method_name="valid_snapshot_target",
+                arg_name="relation",
+                got_value=relation,
+                expected_type=self.Relation,
+            )
+        columns = self.get_columns_in_relation(relation)
+        names = set(c.name.lower() for c in columns)
+        required_columns = [
+            "dbt_scd_id",
+            "dbt_valid_from",
+            "dbt_change_type",
+            "dbt_unique_key",
+            "dbt_snapshot_at",
+        ]
+        missing = [c for c in required_columns if c not in names]
+        if missing:
+            msg = (
+                "Snapshot target is not a snapshot table (missing '{}')"
+                .format('", "'.join(missing))
+            )
+            raise_compiler_error(msg)
