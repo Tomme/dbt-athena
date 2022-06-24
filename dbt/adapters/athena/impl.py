@@ -180,7 +180,7 @@ class AthenaAdapter(SQLAdapter):
         }
         # If the catalog is `awsdatacatalog` we don't need to pass CatalogId as boto3 infers it from the account Id.
         if catalog_id:
-            kwargs['CatalogId'] = catalog_id        
+            kwargs['CatalogId'] = catalog_id
         page_iterator = paginator.paginate(**kwargs)
 
         relations = []
@@ -190,21 +190,24 @@ class AthenaAdapter(SQLAdapter):
             'identifier': True
         }
 
-        for page in page_iterator:
-            tables = page['TableList']
-            for table in tables:
-                _type = table['TableType']
-                if _type == 'VIRTUAL_VIEW':
-                    _type = self.Relation.View
-                else:
-                    _type = self.Relation.Table
+        try:
+            for page in page_iterator:
+                tables = page['TableList']
+                for table in tables:
+                    _type = table['TableType']
+                    if _type == 'VIRTUAL_VIEW':
+                        _type = self.Relation.View
+                    else:
+                        _type = self.Relation.Table
 
-                relations.append(self.Relation.create(
-                    schema=table['DatabaseName'],
-                    database=schema_relation.database,
-                    identifier=table['Name'],
-                    quote_policy=quote_policy,
-                    type=_type,
-                ))
+                    relations.append(self.Relation.create(
+                        schema=table['DatabaseName'],
+                        database=schema_relation.database,
+                        identifier=table['Name'],
+                        quote_policy=quote_policy,
+                        type=_type,
+                    ))
+        except glue_client.exceptions.EntityNotFoundException as e:
+            logger.warning(f'Could not find relation while getting metadata: {e.response["Message"]}')
 
         return relations
