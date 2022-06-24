@@ -1,20 +1,20 @@
-import itertools
 import re
-from email.quoprimime import quote
-from threading import Lock
-from typing import List, Optional, Set
+from itertools import chain
+from typing import Dict, Iterator, List, Optional, Set
 from uuid import uuid4
 
 import agate
 import dbt.exceptions
 from botocore.exceptions import ClientError
 from dbt.adapters.athena import AthenaConnectionManager
-from dbt.adapters.athena.relation import AthenaRelation
+from dbt.adapters.athena.relation import AthenaRelation, AthenaSchemaSearchMap
 from dbt.adapters.base import available
 from dbt.adapters.base.column import Column
+from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
 from dbt.adapters.base.relation import InformationSchema
 from dbt.adapters.sql import SQLAdapter
 from dbt.clients.agate_helper import table_from_rows
+from dbt.contracts.graph.compiled import CompileResultNode
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.relation import RelationType
 from dbt.events import AdapterLogger
@@ -216,7 +216,16 @@ class AthenaAdapter(SQLAdapter):
                 e.response["Error"]["Code"],
                 e.response["Error"].get("Message"),
             )
-            return super()._get_one_catalog(information_schema, schemas, manifest)
+            kwargs = {"information_schema": information_schema, "schemas": schemas}
+            table = self.execute_macro(
+                GET_CATALOG_MACRO_NAME,
+                kwargs=kwargs,
+                # pass in the full manifest so we get any local project
+                # overrides
+                manifest=manifest,
+            )
+            results = self._catalog_filter_table(table, manifest)
+            return results
 
     def _retrieve_glue_tables(self, catalog_id: str, name: str):
         """Retrive Table informations through Glue API"""
@@ -257,3 +266,14 @@ class AthenaAdapter(SQLAdapter):
     @available
     def quote_seed_column(self, column: str, quote_config: Optional[bool]) -> str:
         return super().quote_seed_column(column, False)
+
+    def _get_catalog_schemas(self, manifest: Manifest) -> AthenaSchemaSearchMap:
+        info_schema_name_map = AthenaSchemaSearchMap()
+        nodes: Iterator[CompileResultNode] = chain(
+            [node for node in manifest.nodes.values() if (node.is_relational and not node.is_ephemeral_model)],
+            manifest.sources.values(),
+        )
+        for node in nodes:
+            relation = self.Relation.create_from(self.config, node)
+            info_schema_name_map.add(relation)
+        return info_schema_name_map

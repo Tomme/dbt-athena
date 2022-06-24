@@ -5,6 +5,7 @@
   {%- set bucket_count = config.get('bucket_count', default=none) -%}
   {%- set field_delimiter = config.get('field_delimiter', default=none) -%}
   {%- set format = config.get('format', default='parquet') -%}
+  {%- set write_compression = config.get('write_compression', default=none) -%}
 
   create table
     {{ relation }}
@@ -24,6 +25,9 @@
       {%- endif %}
       {%- if field_delimiter is not none %}
         field_delimiter='{{ field_delimiter }}',
+      {%- endif %}
+      {%- if write_compression is not none %}
+        write_compression='{{ write_compression }}',
       {%- endif %}
         format='{{ format }}'
     )
