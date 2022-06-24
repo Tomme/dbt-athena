@@ -151,9 +151,9 @@ class AthenaAdapter(SQLAdapter):
         """hook macro get_catalog, and at first retrieving info via Glue API Directory"""
         # At first, we need to retrieve all schema name, and filter out from used schema lists
         target_database = information_schema.database
-        schemas = self.list_schemas(target_database)
         used_schemas = frozenset(s.lower() for _, s in manifest.get_used_schemas())
-        target_schemas = [x for x in schemas if x.lower() in used_schemas]
+        schema_list = self.list_schemas(target_database)
+        target_schemas = [x for x in schema_list if x.lower() in used_schemas]
 
         try:
             rows = []
@@ -165,40 +165,44 @@ class AthenaAdapter(SQLAdapter):
                     # Column key: type, index, name, comment
                     # Stats key: label, value, description, include
                     # Stats has a secondary prefix, user defined one.
-                    row = {
+
+                    # Table wide info
+                    table_row = {
                         "table_database": target_database,
                         "table_schema": schema,
                         "table_name": table["Name"],
                         "table_type": rel_type,
                     }
-                    descriptor = table["StorageDescriptor"]
-                    for idx, col in enumerate(descriptor["Columns"]):
-                        row.update(
-                            {
-                                "column_name": col["Name"],
-                                "column_type": col["Type"],
-                                "column_index": str(idx),
-                                "column_comment": col.get("Comment", ""),
-                            }
-                        )
                     # Additional info
-                    row.update(
+                    descriptor = table["StorageDescriptor"]
+                    table_row.update(
                         self._create_stats_dict("description", table.get("Description", ""), "Table description")
                     )
-                    row.update(self._create_stats_dict("owner", table.get("Owner", ""), "Table owner"))
-                    row.update(
+                    table_row.update(self._create_stats_dict("owner", table.get("Owner", ""), "Table owner"))
+                    table_row.update(
                         self._create_stats_dict("created_at", str(table.get("CreateTime", "")), "Table creation time")
                     )
-                    row.update(
+                    table_row.update(
                         self._create_stats_dict("updated_at", str(table.get("UpdateTime", "")), "Table update time")
                     )
-                    row.update(self._create_stats_dict("created_by", table["CreatedBy"], "Who create it"))
-                    row.update(self._create_stats_dict("partitions", table["PartitionKeys"], "Partition keys"))
-                    row.update(self._create_stats_dict("location", descriptor.get("Location", ""), "Table path"))
-                    row.update(
+                    table_row.update(self._create_stats_dict("created_by", table["CreatedBy"], "Who create it"))
+                    table_row.update(self._create_stats_dict("partitions", table["PartitionKeys"], "Partition keys"))
+                    table_row.update(self._create_stats_dict("location", descriptor.get("Location", ""), "Table path"))
+                    table_row.update(
                         self._create_stats_dict("compressed", descriptor["Compressed"], "Table has compressed or not")
                     )
-                    rows.append(row)
+                    # each column info
+                    for idx, col in enumerate(descriptor["Columns"] + table["PartitionKeys"]):
+                        row = table_row.copy()
+                        row.update(
+                            {
+                                "column_name": str(col["Name"]),
+                                "column_type": str(col["Type"]),
+                                "column_index": idx,
+                                "column_comment": str(col.get("Comment", "")),
+                            }
+                        )
+                        rows.append(row)
 
             if not rows:
                 return table_from_rows([])  # Return empty table
