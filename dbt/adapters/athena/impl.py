@@ -185,7 +185,7 @@ class AthenaAdapter(SQLAdapter):
 
         relations = []
         quote_policy = {
-            'database': True,
+            'database': False,
             'schema': True,
             'identifier': True
         }
