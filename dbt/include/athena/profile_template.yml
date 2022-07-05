@@ -1,7 +1,7 @@
 fixed:
   type: athena
 prompts:
-  s3_staging_dir:
+  query_dump_bucket:
     hint: S3 location to store Athena query results and metadata
 
   region_name:

@@ -3,14 +3,16 @@ default:
 
     dev:
       type: athena
-      s3_staging_dir: [s3_staging_dir]
+      query_dump_bucket: s3_staging_dir
+      data_bucket: s3_data_bucket
       region_name: [region_name]
       database: [database name]
       schema: [dev_schema]
 
     prod:
       type: athena
-      s3_staging_dir: [ s3_staging_dir ]
+      query_dump_bucket: s3_staging_dir
+      data_bucket: s3_data_bucket
       region_name: [ region_name ]
       database: [ database name ]
       schema: [ prod_schema ]
