@@ -41,16 +41,17 @@ stored login info. You can configure the AWS profile name to use via `aws_profil
 
 A dbt profile can be configured to run against AWS Athena using the following configuration:
 
-| Option          | Description                                                                     | Required?  | Example             |
-|---------------- |-------------------------------------------------------------------------------- |----------- |-------------------- |
-| s3_staging_dir  | S3 location to store Athena query results and metadata                          | Required   | `s3://bucket/dbt/`  |
-| region_name     | AWS region of your Athena instance                                              | Required   | `eu-west-1`         |
-| schema          | Specify the schema (Athena database) to build models into (lowercase **only**)  | Required   | `dbt`               |
-| database        | Specify the database (Data catalog) to build models into (lowercase **only**)   | Required   | `awsdatacatalog`    |
-| poll_interval   | Interval in seconds to use for polling the status of query results in Athena    | Optional   | `5`                 |
-| aws_profile_name| Profile to use from your AWS shared credentials file.                           | Optional   | `my-profile`        |
-| work_group| Identifier of Athena workgroup   | Optional   | `my-custom-workgroup`        |
-| num_retries| Number of times to retry a failing query | Optional  | `3`  | `5`
+| Option            | Description                                                                    | Required? | Example               |
+|-------------------|--------------------------------------------------------------------------------|-----------|-----------------------|
+| query_dump_bucket | S3 bucket to store Athena query results and metadata                           | Required  | `bucket/dbt/`         |
+| data_bucket       | S3 bucket to store data written out by dbt                                     | Required  | `bucket/dbt/`         |
+| region_name       | AWS region of your Athena instance                                             | Required  | `eu-west-1`           |
+| schema            | Specify the schema (Athena database) to build models into (lowercase **only**) | Required  | `dbt`                 |
+| database          | Specify the database (Data catalog) to build models into (lowercase **only**)  | Required  | `awsdatacatalog`      |
+| poll_interval     | Interval in seconds to use for polling the status of query results in Athena   | Optional  | `5`                   |
+| aws_profile_name  | Profile to use from your AWS shared credentials file.                          | Optional  | `my-profile`          |
+| work_group        | Identifier of Athena workgroup                                                 | Optional  | `my-custom-workgroup` |
+| num_retries       | Number of times to retry a failing query                                       | Optional  | `5`                   |
 
 **Example profiles.yml entry:**
 ```yaml
@@ -59,7 +60,8 @@ athena:
   outputs:
     dev:
       type: athena
-      s3_staging_dir: s3://athena-query-results/dbt/
+      query_dump_bucekt: athena-query-results/dbt/
+      data_bucket: dbt-derived-tables
       region_name: eu-west-1
       schema: dbt
       database: awsdatacatalog
@@ -79,7 +81,8 @@ _Additional information_
 
 * `external_location` (`default=none`)
   * The location where Athena saves your table in Amazon S3
-  * If `none` then it will default to `{s3_staging_dir}/tables`
+  * For models if `none` then it will default to `s3://{data_bucket}/{env_name}/models/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
+  * For seeds if `none` then it will default to `s3://{data_bucket}/{env_name}/seeds/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
   * If you are using a static value, when your table/partition is recreated underlying data will be cleaned up and overwritten by new data
 * `partitioned_by` (`default=none`)
   * An array list of columns by which the table will be partitioned
