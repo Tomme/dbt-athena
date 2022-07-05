@@ -22,14 +22,12 @@
   {%- endif -%}
   {%- set file_name = split_model_path[-1].split('.')[0] -%}
   {%- set table_name = file_name.split('__')[-1] -%}
-  {%- set run_time = run_started_at.strftime('%Y-%m-%d %H:%M:%S') -%}
   {%-
-    set default_external_location = adapter.generate_s3_data_path(
+    set default_external_location = adapter.generate_seeds_s3_write_path(
       env_name,
       domain_name,
       database_name,
-      table_name,
-      run_time
+      table_name
     )
   -%}
 
