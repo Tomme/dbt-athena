@@ -81,8 +81,8 @@ _Additional information_
 
 * `external_location` (`default=none`)
   * The location where Athena saves your table in Amazon S3
-  * For models if `none` then it will default to `s3://{data_bucket}/{env_name}/models/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
-  * For seeds if `none` then it will default to `s3://{data_bucket}/{env_name}/seeds/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
+  * For models if `none` then it will default to `{s3_data_dir}/{env_name}/models/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
+  * For seeds if `none` then it will default to `{s3_data_dir}/{env_name}/seeds/domain_name={domain_name}/database_name={schema_name}/table_name={table_name}`
   * If you are using a static value, when your table/partition is recreated underlying data will be cleaned up and overwritten by new data
 * `partitioned_by` (`default=none`)
   * An array list of columns by which the table will be partitioned
