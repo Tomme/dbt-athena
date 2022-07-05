@@ -32,8 +32,8 @@ logger = AdapterLogger("Athena")
 
 @dataclass
 class AthenaCredentials(Credentials):
-    query_dump_bucket: str
-    data_bucket: str
+    s3_staging_dir: str
+    s3_data_dir: str
     region_name: str
     schema: str
     endpoint_url: Optional[str] = None
@@ -53,8 +53,8 @@ class AthenaCredentials(Credentials):
 
     def _connection_keys(self) -> Tuple[str, ...]:
         return (
-            "query_dump_bucket",
-            "data_bucket",
+            "s3_staging_dir",
+            "s3_data_dir",
             "work_group",
             "region_name",
             "database",
@@ -85,7 +85,7 @@ class AthenaCursor(Cursor):
         operation: str,
         parameters: Optional[Dict[str, Any]] = None,
         work_group: Optional[str] = None,
-        query_dump_bucket: Optional[str] = None,
+        s3_staging_dir: Optional[str] = None,
         endpoint_url: Optional[str] = None,
         cache_size: int = 0,
         cache_expiration_time: int = 0,
@@ -95,7 +95,7 @@ class AthenaCursor(Cursor):
                 operation,
                 parameters=parameters,
                 work_group=work_group,
-                s3_staging_dir=query_dump_bucket,
+                s3_staging_dir=s3_staging_dir,
                 cache_size=cache_size,
                 cache_expiration_time=cache_expiration_time,
             )
@@ -149,7 +149,7 @@ class AthenaConnectionManager(SQLConnectionManager):
             creds: AthenaCredentials = connection.credentials
 
             handle = AthenaConnection(
-                s3_staging_dir=creds.query_dump_bucket,
+                s3_staging_dir=creds.s3_staging_dir,
                 endpoint_url=creds.endpoint_url,
                 region_name=creds.region_name,
                 schema_name=creds.schema,

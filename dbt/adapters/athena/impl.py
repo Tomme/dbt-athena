@@ -54,7 +54,7 @@ class AthenaAdapter(SQLAdapter):
         client = conn.credentials
 
         return (
-            f"s3://{client.data_bucket}/{env_name}/models/domain_name={domain_name}/"
+            f"{client.data_bucket}/{env_name}/models/domain_name={domain_name}/"
             f"database_name={schema_name}/table_name={table_name}"
         )
 
@@ -70,7 +70,7 @@ class AthenaAdapter(SQLAdapter):
         client = conn.credentials
 
         return (
-            f"s3://{client.data_bucket}/{env_name}/seeds/domain_name={domain_name}/"
+            f"{client.data_bucket}/{env_name}/seeds/domain_name={domain_name}/"
             f"database_name={schema_name}/table_name={table_name}"
         )
 
