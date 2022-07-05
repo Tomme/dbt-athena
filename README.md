@@ -43,8 +43,8 @@ A dbt profile can be configured to run against AWS Athena using the following co
 
 | Option            | Description                                                                    | Required? | Example               |
 |-------------------|--------------------------------------------------------------------------------|-----------|-----------------------|
-| query_dump_bucket | S3 bucket to store Athena query results and metadata                           | Required  | `bucket/dbt/`         |
-| data_bucket       | S3 bucket to store data written out by dbt                                     | Required  | `bucket/dbt/`         |
+| s3_staging_dir    | S3 location to store Athena query results and metadata                         | Required  | `bucket/dbt/`         |
+| s3_data_dir       | S3 location to store data written out by dbt                                   | Required  | `bucket/dbt/`         |
 | region_name       | AWS region of your Athena instance                                             | Required  | `eu-west-1`           |
 | schema            | Specify the schema (Athena database) to build models into (lowercase **only**) | Required  | `dbt`                 |
 | database          | Specify the database (Data catalog) to build models into (lowercase **only**)  | Required  | `awsdatacatalog`      |
@@ -60,8 +60,8 @@ athena:
   outputs:
     dev:
       type: athena
-      query_dump_bucekt: athena-query-results/dbt/
-      data_bucket: dbt-derived-tables
+      s3_staging_dir: athena-query-results/dbt/
+      s3_data_dir: dbt-derived-tables
       region_name: eu-west-1
       schema: dbt
       database: awsdatacatalog
