@@ -49,7 +49,7 @@ A dbt profile can be configured to run against AWS Athena using the following co
 | schema            | Specify the schema (Athena database) to build models into (lowercase **only**) | Required  | `dbt`                 |
 | database          | Specify the database (Data catalog) to build models into (lowercase **only**)  | Required  | `awsdatacatalog`      |
 | poll_interval     | Interval in seconds to use for polling the status of query results in Athena   | Optional  | `5`                   |
-| aws_profile_name  | Profile to use from your AWS shared credentials file.                          | Optional  | `my-profile`          |
+| aws_profile_name  | Profile to use from your AWS shared credentials file                          | Optional  | `my-profile`          |
 | work_group        | Identifier of Athena workgroup                                                 | Optional  | `my-custom-workgroup` |
 | num_retries       | Number of times to retry a failing query                                       | Optional  | `5`                   |
 
