@@ -4,7 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 from itertools import chain
 from threading import Lock
-from typing import Dict, Iterator, Optional, Set
+from typing import Dict, Iterator, Literal, Optional, Set
 
 from dbt.adapters.base import available
 from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
@@ -49,20 +49,14 @@ class AthenaAdapter(SQLAdapter):
         domain_name: str,
         schema_name: str,
         table_name: str,
-        model: bool,
+        table_type: Literal["models", "seeds"],
     ) -> str:
         conn = self.connections.get_thread_connection()
         client = conn.credentials
-        if model:
-            return (
-                f"{client.s3_data_dir}/{env_name}/models/domain_name={domain_name}/"
-                f"database_name={schema_name}/table_name={table_name}"
-            )
-        else:
-            return (
-                f"{client.s3_data_dir}/{env_name}/seeds/domain_name={domain_name}/"
-                f"database_name={schema_name}/table_name={table_name}"
-            )
+        return (
+            f"{client.s3_data_dir}/{env_name}/{table_type}/domain_name={domain_name}/"
+            f"database_name={schema_name}/table_name={table_name}"
+        )
 
     @available
     def clean_up_partitions(
