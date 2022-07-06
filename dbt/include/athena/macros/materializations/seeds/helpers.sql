@@ -28,7 +28,7 @@
       domain_name,
       database_name,
       table_name,
-      seeds
+      'seeds'
     )
   -%}
 
