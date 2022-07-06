@@ -4,6 +4,9 @@ prompts:
   s3_staging_dir:
     hint: S3 location to store Athena query results and metadata
 
+  s3_data_dir:
+    hint: S3 location to store output data created by dbt
+
   region_name:
     hint: AWS region of your Athena instance
 
