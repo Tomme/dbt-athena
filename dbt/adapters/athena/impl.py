@@ -43,36 +43,26 @@ class AthenaAdapter(SQLAdapter):
         return "timestamp"
 
     @available
-    def generate_models_s3_write_path(
+    def generate_s3_write_path(
         self,
         env_name: str,
         domain_name: str,
         schema_name: str,
         table_name: str,
+        model: bool,
     ) -> str:
         conn = self.connections.get_thread_connection()
         client = conn.credentials
-
-        return (
-            f"{client.s3_data_dir}/{env_name}/models/domain_name={domain_name}/"
-            f"database_name={schema_name}/table_name={table_name}"
-        )
-
-    @available
-    def generate_seeds_s3_write_path(
-        self,
-        env_name: str,
-        domain_name: str,
-        schema_name: str,
-        table_name: str,
-    ) -> str:
-        conn = self.connections.get_thread_connection()
-        client = conn.credentials
-
-        return (
-            f"{client.s3_data_dir}/{env_name}/seeds/domain_name={domain_name}/"
-            f"database_name={schema_name}/table_name={table_name}"
-        )
+        if model:
+            return (
+                f"{client.s3_data_dir}/{env_name}/models/domain_name={domain_name}/"
+                f"database_name={schema_name}/table_name={table_name}"
+            )
+        else:
+            return (
+                f"{client.s3_data_dir}/{env_name}/seeds/domain_name={domain_name}/"
+                f"database_name={schema_name}/table_name={table_name}"
+            )
 
     @available
     def clean_up_partitions(
