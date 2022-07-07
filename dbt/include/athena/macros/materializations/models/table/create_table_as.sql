@@ -13,12 +13,12 @@
   {%- set file_name = split_model_path[-1].split('.')[0] -%}
 
   {%-
-    set default_external_location = adapter.generate_s3_data_path(
+    set default_external_location = adapter.generate_s3_write_path(
       env_name,
       domain_name,
       database_name,
       table_name,
-      run_time
+      'models'
     )
   -%}
   {%-
