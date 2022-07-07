@@ -13,6 +13,7 @@
 
   {%- set split_model_path = model.path.split('/') -%}
   {%- set domain_name = split_model_path[0] -%}
+  {%- set file_name = split_model_path[-1].split('.')[0] -%}
   {%- if target.get('target_name')=='dev' -%}
     {%- set env_name = 'dev' -%}
     {%- set database_name = split_model_path[1] + '_' + env_name + '_dbt' -%}
@@ -22,7 +23,6 @@
     {%- set database_name = split_model_path[1] -%}
     {%- set table_name = file_name.split('__')[-1] -%}
   {%- endif -%}
-  {%- set file_name = split_model_path[-1].split('.')[0] -%}
 
   {%-
     set default_external_location = adapter.generate_s3_write_path(
