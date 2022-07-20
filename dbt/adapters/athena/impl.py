@@ -68,7 +68,7 @@ class AthenaAdapter(SQLAdapter):
 
         with boto3_client_lock:
             glue_client = boto3.client("glue", region_name=client.region_name)
-            s3_resource = boto3.resource("s3", region_name=client.region_name)
+        s3_resource = boto3.resource("s3", region_name=client.region_name)
         partitions = glue_client.get_partitions(
             # CatalogId='123456789012', # Need to make this configurable if it is different from default AWS Account ID
             DatabaseName=database_name,
