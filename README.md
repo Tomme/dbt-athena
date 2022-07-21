@@ -51,6 +51,7 @@ A dbt profile can be configured to run against AWS Athena using the following co
 | aws_profile_name| Profile to use from your AWS shared credentials file.                           | Optional   | `my-profile`        |
 | work_group| Identifier of Athena workgroup   | Optional   | `my-custom-workgroup`        |
 | num_retries| Number of times to retry a failing query | Optional  | `3`  | `5`
+| use_glue_api| Use Glue API directly to retrieve table schema information instead of calling information schema SQL  | Optional  |  true (default: false) |
 
 **Example profiles.yml entry:**
 ```yaml
@@ -95,7 +96,7 @@ _Additional information_
   * The compression type to use for any storage format that allows compression to be specified. To see which options are available, check out [CREATE TABLE AS][create-table-as]
 * `field_delimiter` (`default=none`)
   * Custom field delimiter, for when format is set to `TEXTFILE`
-  
+
 More information: [CREATE TABLE AS][create-table-as]
 
 [run_started_at]: https://docs.getdbt.com/reference/dbt-jinja-functions/run_started_at
@@ -116,7 +117,7 @@ The following features of dbt are not implemented on Athena:
 
 * Quoting is not currently supported
   * If you need to quote your sources, escape the quote characters in your source definitions:
-  
+
   ```yaml
   version: 2
 

@@ -59,28 +59,30 @@ class AthenaAdapter(SQLAdapter):
         relations = []
         # Default quote policy of SQLAdapter
         quote_policy = {"database": True, "schema": True, "identifier": True}
-        try:
-            for table in self._retrieve_glue_tables(schema_relation.database, schema_relation.schema):
-                rel_type = self._get_rel_type_from_glue_response(table)
-                relation = self.Relation.create(
-                    database=schema_relation.database,
-                    identifier=table["Name"],
-                    schema=schema_relation.schema,
-                    quote_policy=quote_policy,
-                    type=rel_type,
-                    # StorageDescriptor.Columns doesn't include columns used as partition key
-                    column_information=table["StorageDescriptor"]["Columns"] + table["PartitionKeys"],
+        conn = self.connections.get_thread_connection()
+        if conn.credentials.use_glue_api:
+            try:
+                for table in self._retrieve_glue_tables(schema_relation.database, schema_relation.schema):
+                    rel_type = self._get_rel_type_from_glue_response(table)
+                    relation = self.Relation.create(
+                        database=schema_relation.database,
+                        identifier=table["Name"],
+                        schema=schema_relation.schema,
+                        quote_policy=quote_policy,
+                        type=rel_type,
+                        # StorageDescriptor.Columns doesn't include columns used as partition key
+                        column_information=table["StorageDescriptor"]["Columns"] + table["PartitionKeys"],
+                    )
+                    relations.append(relation)
+                return relations
+            except ClientError as e:
+                logger.debug(
+                    "Boto3 Error while retrieving relations. Fallback into SQL execution: code={}, message={}",
+                    e.response["Error"]["Code"],
+                    e.response["Error"].get("Message"),
                 )
-                relations.append(relation)
-            return relations
-        except ClientError as e:
-            logger.debug(
-                "Boto3 Error while retrieving relations. Fallback into SQL execution: code={}, message={}",
-                e.response["Error"]["Code"],
-                e.response["Error"].get("Message"),
-            )
-            # Fallback into SQL query
-            return super().list_relations_without_caching(schema_relation)
+                # Fallback into SQL query
+        return super().list_relations_without_caching(schema_relation)
 
     @available
     def s3_uuid_table_location(self):
@@ -154,82 +156,92 @@ class AthenaAdapter(SQLAdapter):
         used_schemas = frozenset(s.lower() for _, s in manifest.get_used_schemas())
         schema_list = self.list_schemas(target_database)
         target_schemas = [x for x in schema_list if x.lower() in used_schemas]
+        conn = self.connections.get_thread_connection()
+        if conn.credentials.use_glue_api:
+            try:
+                rows = []
+                for schema in target_schemas:
+                    for table in self._retrieve_glue_tables(target_database, schema):
+                        rel_type = self._get_rel_type_from_glue_response(table)
+                        # Important prefix: "table_", "column_", "stats:"
+                        # Table key: database, schema, name
+                        # Column key: type, index, name, comment
+                        # Stats key: label, value, description, include
+                        # Stats has a secondary prefix, user defined one.
 
-        try:
-            rows = []
-            for schema in target_schemas:
-                for table in self._retrieve_glue_tables(target_database, schema):
-                    rel_type = self._get_rel_type_from_glue_response(table)
-                    # Important prefix: "table_", "column_", "stats:"
-                    # Table key: database, schema, name
-                    # Column key: type, index, name, comment
-                    # Stats key: label, value, description, include
-                    # Stats has a secondary prefix, user defined one.
-
-                    # Table wide info
-                    table_row = {
-                        "table_database": target_database,
-                        "table_schema": schema,
-                        "table_name": table["Name"],
-                        "table_type": rel_type,
-                    }
-                    # Additional info
-                    descriptor = table["StorageDescriptor"]
-                    table_row.update(
-                        self._create_stats_dict("description", table.get("Description", ""), "Table description")
-                    )
-                    table_row.update(self._create_stats_dict("owner", table.get("Owner", ""), "Table owner"))
-                    table_row.update(
-                        self._create_stats_dict("created_at", str(table.get("CreateTime", "")), "Table creation time")
-                    )
-                    table_row.update(
-                        self._create_stats_dict("updated_at", str(table.get("UpdateTime", "")), "Table update time")
-                    )
-                    table_row.update(self._create_stats_dict("created_by", table["CreatedBy"], "Who create it"))
-                    table_row.update(self._create_stats_dict("partitions", table["PartitionKeys"], "Partition keys"))
-                    table_row.update(self._create_stats_dict("location", descriptor.get("Location", ""), "Table path"))
-                    table_row.update(
-                        self._create_stats_dict("compressed", descriptor["Compressed"], "Table has compressed or not")
-                    )
-                    # each column info
-                    for idx, col in enumerate(descriptor["Columns"] + table["PartitionKeys"]):
-                        row = table_row.copy()
-                        row.update(
-                            {
-                                "column_name": str(col["Name"]),
-                                "column_type": str(col["Type"]),
-                                "column_index": idx,
-                                "column_comment": str(col.get("Comment", "")),
-                            }
+                        # Table wide info
+                        table_row = {
+                            "table_database": target_database,
+                            "table_schema": schema,
+                            "table_name": table["Name"],
+                            "table_type": rel_type,
+                        }
+                        # Additional info
+                        descriptor = table["StorageDescriptor"]
+                        table_row.update(
+                            self._create_stats_dict("description", table.get("Description", ""), "Table description")
                         )
-                        rows.append(row)
+                        table_row.update(self._create_stats_dict("owner", table.get("Owner", ""), "Table owner"))
+                        table_row.update(
+                            self._create_stats_dict(
+                                "created_at", str(table.get("CreateTime", "")), "Table creation time"
+                            )
+                        )
+                        table_row.update(
+                            self._create_stats_dict("updated_at", str(table.get("UpdateTime", "")), "Table update time")
+                        )
+                        table_row.update(self._create_stats_dict("created_by", table["CreatedBy"], "Who create it"))
+                        table_row.update(
+                            self._create_stats_dict("partitions", table["PartitionKeys"], "Partition keys")
+                        )
+                        table_row.update(
+                            self._create_stats_dict("location", descriptor.get("Location", ""), "Table path")
+                        )
+                        table_row.update(
+                            self._create_stats_dict(
+                                "compressed", descriptor["Compressed"], "Table has compressed or not"
+                            )
+                        )
+                        # each column info
+                        for idx, col in enumerate(descriptor["Columns"] + table["PartitionKeys"]):
+                            row = table_row.copy()
+                            row.update(
+                                {
+                                    "column_name": str(col["Name"]),
+                                    "column_type": str(col["Type"]),
+                                    "column_index": idx,
+                                    "column_comment": str(col.get("Comment", "")),
+                                }
+                            )
+                            rows.append(row)
 
-            if not rows:
-                return table_from_rows([])  # Return empty table
-            # rows is List[Dict], so iterate over each row as List[columns], List[column_names]
-            column_names = list(rows[0].keys())  # dict key order is preserved in language level
-            table = table_from_rows(
-                [list(x.values()) for x in rows],
-                column_names,
-                text_only_columns=["table_database", "table_schema", "table_name"],
-            )
-            return self._catalog_filter_table(table, manifest)
-        except ClientError as e:
-            logger.debug(
-                "Boto3 Error while retrieving catalog. Fallback into SQL execution: code={}, message={}",
-                e.response["Error"]["Code"],
-                e.response["Error"].get("Message"),
-            )
-            kwargs = {"information_schema": information_schema, "schemas": schemas}
-            table = self.execute_macro(
-                GET_CATALOG_MACRO_NAME,
-                kwargs=kwargs,
-                # pass in the full manifest so we get any local project
-                # overrides
-                manifest=manifest,
-            )
-            results = self._catalog_filter_table(table, manifest)
-            return results
+                if not rows:
+                    return table_from_rows([])  # Return empty table
+                # rows is List[Dict], so iterate over each row as List[columns], List[column_names]
+                column_names = list(rows[0].keys())  # dict key order is preserved in language level
+                table = table_from_rows(
+                    [list(x.values()) for x in rows],
+                    column_names,
+                    text_only_columns=["table_database", "table_schema", "table_name"],
+                )
+                return self._catalog_filter_table(table, manifest)
+            except ClientError as e:
+                logger.debug(
+                    "Boto3 Error while retrieving catalog. Fallback into SQL execution: code={}, message={}",
+                    e.response["Error"]["Code"],
+                    e.response["Error"].get("Message"),
+                )
+                # Fallback into SQL query
+        kwargs = {"information_schema": information_schema, "schemas": schemas}
+        table = self.execute_macro(
+            GET_CATALOG_MACRO_NAME,
+            kwargs=kwargs,
+            # pass in the full manifest so we get any local project
+            # overrides
+            manifest=manifest,
+        )
+        results = self._catalog_filter_table(table, manifest)
+        return results
 
     def _retrieve_glue_tables(self, catalog_id: str, name: str):
         """Retrive Table informations through Glue API"""
