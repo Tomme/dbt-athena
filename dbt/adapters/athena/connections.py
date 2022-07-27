@@ -87,9 +87,6 @@ def _paginate(operation: str, parameter: list) -> tuple[list, list]:
             (i+max_inserts_per_query)*num_of_params_per_placeholder
         ]
         insert_parameters.append(tmp_parameters)
-    
-    print("end")
-
     return insert_commands, insert_parameters
 
 
