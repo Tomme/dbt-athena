@@ -284,8 +284,10 @@ class AthenaParameterFormatter(Formatter):
             raise ProgrammingError("Query is none or empty.")
         operation = operation.strip()
 
-        if operation.upper().startswith("SELECT") or operation.upper().startswith(
-            "WITH"
+        if (
+            operation.upper().startswith("SELECT")
+            or operation.upper().startswith("WITH")
+            or operation.upper().startswith("INSERT")
         ):
             escaper = _escape_presto
         else:
