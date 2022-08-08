@@ -4,6 +4,8 @@ target:
   schema: "{{ env_var('DBT_TEST_ATHENA_SCHEMA', 'dbt_integration_tests') }}"
   region_name: "{{ env_var('DBT_TEST_ATHENA_REGION', 'eu-west-1') }}"
   s3_staging_dir: "{{ env_var('DBT_TEST_ATHENA_S3_STAGING_DIR') }}"
+  aws_profile_name: "{{ env_var('DBT_TEST_AWS_PROFILE') }}"
+  work_group: "{{ env_var('DBT_TEST_ATHENA_WORKGROUP', 'primary') }}"
 sequences:
   test_dbt_empty: empty
   test_dbt_base: base
