@@ -1,6 +1,5 @@
 import inspect
 import re
-
 from typing import ContextManager, Tuple, Optional, List, Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -51,10 +50,11 @@ def paginate_insert_into(func):
             return ret_val
         else:
             return func(*args, **kwargs)
+
     return wrapper
 
 
-def _paginate(operation: str, parameter: list) -> tuple[list, list]:
+def _paginate(operation: str, parameter: list) -> Tuple[list, list]:
     """
     We need to paginate the insert into commands as if they get too big, athena doesn't
     play ball. This has nothing to do with the amount of data being added in, rather the
@@ -73,18 +73,19 @@ def _paginate(operation: str, parameter: list) -> tuple[list, list]:
     ]
     placeholders_all = placeholder_regex.findall(placeholders)
 
-    # how many params per placeholder e.g. (%s, %s) (%s, %s, %s) etc 
+    # how many params per placeholder e.g. (%s, %s) (%s, %s, %s) etc
     # QA: could check they're all the same? and that it matches the count of params?
     # QA: could also check that len(parameter) = num * len(placeholders_all)
-    num_of_params_per_placeholder = placeholders_all[0].count("%") 
+    num_of_params_per_placeholder = placeholders_all[0].count("%")
 
     # build the return lists of parameters and operations
     for i in range(0, len(placeholders_all), max_inserts_per_query):
-        tmp_placeholder = ",".join(placeholders_all[i:i+max_inserts_per_query])
+        tmp_placeholder = ",".join(placeholders_all[i : i + max_inserts_per_query])
         insert_commands.append(f"{insert_command} {tmp_placeholder}")
         tmp_parameters = parameter[
-            i*num_of_params_per_placeholder:
-            (i+max_inserts_per_query)*num_of_params_per_placeholder
+            i
+            * num_of_params_per_placeholder : (i + max_inserts_per_query)
+            * num_of_params_per_placeholder
         ]
         insert_parameters.append(tmp_parameters)
     return insert_commands, insert_parameters
