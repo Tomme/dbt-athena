@@ -181,7 +181,7 @@ class AthenaAdapter(SQLAdapter):
         paginator = glue_client.get_paginator('get_databases')
         kwargs = {}
         if catalog_id:
-            kwargs['CatalogId'] = catalog_id        
+            kwargs['CatalogId'] = catalog_id
         page_iterator = paginator.paginate(**kwargs)
 
         databases = []
