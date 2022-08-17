@@ -105,7 +105,7 @@ class AthenaCursor(Cursor):
             return self
 
         retry = tenacity.Retrying(
-            retry=retry_if_exception(lambda _: True),
+            retry=retry_if_exception(lambda exc: isinstance(exc, OperationalError)),
             stop=stop_after_attempt(self._retry_config.attempt),
             wait=wait_exponential(
                 multiplier=self._retry_config.attempt,
