@@ -176,6 +176,22 @@ class AthenaAdapter(SQLAdapter):
         client = conn.handle
         with boto3_client_lock:
             glue_client = boto3.client('glue', region_name=client.region_name)
+
+        # check for database existence before getting tables
+        paginator = glue_client.get_paginator('get_databases')
+        kwargs = {}
+        if catalog_id:
+            kwargs['CatalogId'] = catalog_id
+        page_iterator = paginator.paginate(**kwargs)
+
+        databases = []
+        for page in page_iterator:
+            for db in page["DatabaseList"]:
+                databases.append(db["Name"])
+
+        if schema_relation.schema not in databases:
+            return []
+
         paginator = glue_client.get_paginator('get_tables')
 
         kwargs = {
