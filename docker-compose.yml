@@ -1,0 +1,17 @@
+version: '3'
+services:
+  dbt_dev:
+    container_name: dbt_dev
+    image: dbt_dev:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      - DBT_PROFILES_DIR=/root/.dbt
+    env_file:
+      - .env
+    volumes:
+      - ./test:/root/test
+      - ./test_model:/root/test_model
+      - ./test_profile:/root/.dbt
+      - ~/.aws/:/root/.aws

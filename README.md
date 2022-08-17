@@ -148,6 +148,37 @@ Next, configure the environment variables in [dev.env](dev.env) to match your At
 make run_tests
 ```
 
+### Docker setup
+
+Add any environment variables needed to run your dbt project (i.e. `AWS_PROFILE`) to `.env`. Create symlinks to your dbt project and profiles:
+
+```sh
+ln -s /path/to/dbt_model test_model
+ln -s /path/to/.dbt test_profile
+```
+
+Run docker compose to start the dev container:
+```sh
+docker-compose up --build
+```
+
+Connect to the dev container:
+```sh
+docker exec -it dbt_dev /bin/bash
+```
+
+Run dbt or run tests on the container:
+```sh
+# run local dbt model
+cd /root/test_model
+dbt run --select athena --vars='{...}'
+
+# run tests
+pytest /root/test/integration/athena.dbtspec
+```
+
+To test changes to the adapter, the Docker image needs to be rebuilt with `docker build -t dbt_dev .` or `docker-compose up --build`.
+
 ### Community
 
 * [fishtown-analytics/dbt][fishtown-analytics/dbt]

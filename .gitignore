@@ -142,3 +142,5 @@ cython_debug/
 
 # Project specific
 test.py
+test_model
+test_profile
