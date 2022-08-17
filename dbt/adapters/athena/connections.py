@@ -1,3 +1,4 @@
+import boto3
 from typing import ContextManager, Tuple, Optional, List, Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -140,13 +141,11 @@ class AthenaConnectionManager(SQLConnectionManager):
             handle = AthenaConnection(
                 s3_staging_dir=creds.s3_staging_dir,
                 endpoint_url=creds.endpoint_url,
-                region_name=creds.region_name,
                 schema_name=creds.schema,
                 work_group=creds.work_group,
                 cursor_class=AthenaCursor,
                 formatter=AthenaParameterFormatter(),
                 poll_interval=creds.poll_interval,
-                profile_name=creds.aws_profile_name,
                 retry_config=RetryConfig(
                     attempt=creds.num_retries,
                     exceptions=(
@@ -154,6 +153,10 @@ class AthenaConnectionManager(SQLConnectionManager):
                         "TooManyRequestsException",
                         "InternalServerException",
                     ),
+                ),
+                session=boto3.session.Session(
+                    profile_name=creds.aws_profile_name,
+                    region_name=creds.region_name,
                 ),
             )
 
