@@ -87,6 +87,7 @@ class AthenaAdapter(SQLAdapter):
         conn = self.connections.get_thread_connection()
         client = conn.handle
         with boto3_client_lock:
+            boto3.setup_default_session(profile_name=conn.credentials.aws_profile_name)
             glue_client = boto3.client('glue', region_name=client.region_name)
         try:
             table = glue_client.get_table(
