@@ -6,3 +6,15 @@
     drop {{ relation.type }} if exists {{ relation }}
   {%- endcall %}
 {% endmacro %}
+
+
+{% macro athena__unique_suffix() %}
+  {%- set query -%}
+  SELECT 
+    '__tmp_' || 
+    cast(cast(to_unixtime(now()) as int) as varchar) || '_' || 
+    cast(cast(random() * 1000000 as int) as varchar)
+  {%- endset -%}
+
+  {{ return(run_query(query)[0][0]) }}
+{% endmacro %}
