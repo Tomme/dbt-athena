@@ -91,11 +91,13 @@ _Additional information_
   * The number of buckets for bucketing your data
 * `format` (`default='parquet'`)
   * The data format for the table
-  * Supports `ORC`, `PARQUET`, `AVRO`, `JSON`, or `TEXTFILE`
+  * Supports `ORC`, `PARQUET`, `AVRO`, `JSON`, `TEXTFILE`, or `ICEBERG`
 * `write_compression` (`default=none`)
   * The compression type to use for any storage format that allows compression to be specified. To see which options are available, check out [CREATE TABLE AS][create-table-as]
 * `field_delimiter` (`default=none`)
   * Custom field delimiter, for when format is set to `TEXTFILE`
+* `unique_key` (`default=none`)
+  * In Iceberg tables using `merge` update strategy, `unique_key` must be set to the column(s) to use to merge updates. It may be a single column or concatenated list of columns (i.e. `col1 || col2`)
   
 More information: [CREATE TABLE AS][create-table-as]
 
@@ -107,7 +109,7 @@ More information: [CREATE TABLE AS][create-table-as]
 
 Support for incremental models:
 * Support two incremental update strategies with partitioned tables: `insert_overwrite` and `append`
-* Does **not** support the use of `unique_key`
+* Additionally support `merge` update strategy with `unique_key` on Iceberg tables.
 
 Due to the nature of AWS Athena, not all core dbt functionality is supported.
 The following features of dbt are not implemented on Athena:

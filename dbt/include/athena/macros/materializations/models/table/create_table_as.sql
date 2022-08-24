@@ -7,6 +7,10 @@
   {%- set format = config.get('format', default='parquet') -%}
   {%- set write_compression = config.get('write_compression', default=none) -%}
 
+  {% if format | lower == 'iceberg' %}
+    {%- set format = 'parquet' -%}
+  {% endif %}
+
   create table
     {{ relation }}
 
