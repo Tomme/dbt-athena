@@ -21,12 +21,32 @@
   {% do return(sql_convert_columns_in_relation(table)) %}
 {% endmacro %}
 
-{% macro safe_athena_type(data_type) %}
-  {% if 'varchar' in data_type or 'varying' in data_type %}
+{% macro safe_athena_type(data_type, is_seed=False) %}
+  {% if 'varchar' in data_type or 'varying' in data_type or data_type == 'text' %}
     {%- set safe_type = 'string' -%}
-  {% elif data_type == 'integer' %}
-    {%- set safe_type = 'int' -%}
-  {% elif data_type in ['boolean', 'double', 'date', 'timestamp'] %}
+  {% elif '[]' in data_type %}
+    {%- set inner_type = safe_athena_type(data_type | replace('[]', '')) %}
+    {% if is_seed %}
+      -- seed tables load everything with an insert pattern, complex types are loaded as strings
+      {%- set safe_type = inner_type -%}
+    {% else %}
+      {%- set safe_type = 'array<' ~ inner_type ~ '>' -%}
+    {% endif %}
+  {% elif data_type == 'integer' or data_type == 'int' %}
+    {% if is_seed %}
+      -- seeds use external tables
+      {%- set safe_type = 'int' -%}
+    {% else %}
+      {%- set safe_type = 'integer' -%}
+    {% endif %}
+  {% elif data_type == 'date' %}
+    {% if is_seed %}
+      -- Parquet doesn't support dates?
+      {%- set safe_type = 'string' -%}
+    {% else %}
+      {%- set safe_type = data_type -%}
+    {% endif %}
+  {% elif data_type in ['boolean', 'double', 'timestamp'] %}
     {%- set safe_type = data_type -%}
   {% else %}
     {%- set unknown_data_type = 'Unknown data type ' ~ data_type -%}
