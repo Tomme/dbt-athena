@@ -13,7 +13,7 @@
   {% endif %}
 
   {% set partitioned_by = config.get('partitioned_by', default=none) %}
-  {% set external_location = config.get('external_location') %}
+  {% set external_location = config.get('external_location', default=none) %}
   {% set target_relation = this.incorporate(type='table') %}
   {% set existing_relation = load_relation(this) %}
   {% set tmp_suffix = athena__unique_suffix() %}
@@ -34,7 +34,11 @@
       {% for col in dest_columns %}
         {% do column_list.append(col.name ~ ' ' ~ safe_athena_type(col.data_type)) %}
       {% endfor %}
-      
+
+      {% if external_location is none %}
+        {% set external_location = adapter.s3_staging_dir() ~ target_relation.name %}
+      {% endif %}
+
       {% do run_query(create_iceberg_table(target_relation, column_list, partitioned_by, external_location)) %}
   {% endif %}
 

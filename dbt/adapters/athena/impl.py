@@ -54,6 +54,13 @@ class AthenaAdapter(SQLAdapter):
         return f"{client.s3_staging_dir}tables/{str(uuid4())}/"
 
     @available
+    def s3_staging_dir(self):
+        conn = self.connections.get_thread_connection()
+        client = conn.handle
+
+        return client.s3_staging_dir
+
+    @available
     def clean_up_partitions(
         self, database_name: str, table_name: str, where_condition: str
     ):
