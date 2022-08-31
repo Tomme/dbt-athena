@@ -33,12 +33,7 @@
       {%- set safe_type = 'array<' ~ inner_type ~ '>' -%}
     {% endif %}
   {% elif data_type == 'integer' or data_type == 'int' %}
-    {% if is_seed %}
-      -- seeds use external tables
-      {%- set safe_type = 'int' -%}
-    {% else %}
-      {%- set safe_type = 'integer' -%}
-    {% endif %}
+    {%- set safe_type = 'int' -%}
   {% elif data_type == 'date' %}
     {% if is_seed %}
       -- Parquet doesn't support dates?
@@ -46,7 +41,9 @@
     {% else %}
       {%- set safe_type = data_type -%}
     {% endif %}
-  {% elif data_type in ['boolean', 'double', 'timestamp'] %}
+  {% elif 'decimal' in data_type %}
+    {%- set safe_type = 'double' -%}
+  {% elif data_type in ['boolean', 'double', 'timestamp', 'bigint'] %}
     {%- set safe_type = data_type -%}
   {% else %}
     {%- set unknown_data_type = 'Unknown data type ' ~ data_type -%}

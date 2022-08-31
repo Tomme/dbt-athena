@@ -85,6 +85,13 @@
       {% if tmp_relation is not none %}
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
+      {% if strategy == 'insert_overwrite' and partitioned_by is none %}
+        {% if format | lower == 'iceberg' %}
+          {% do run_query(merge_delete_all(target_relation)) %}
+        {% else %}
+          {% do adapter.clean_up_table(target_relation.schema, target_relation.name) %}
+        {% endif %}
+      {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
       {% set build_sql = incremental_insert(tmp_relation, target_relation) %}
       {% do to_drop.append(tmp_relation) %}
