@@ -4,7 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 from itertools import chain
 from threading import Lock
-from typing import Dict, Iterator, Literal, Optional, Set
+from typing import Dict, Iterator, Literal, Optional, Set, Union
 
 from dbt.adapters.base import available
 from dbt.adapters.base.impl import GET_CATALOG_MACRO_NAME
@@ -41,6 +41,23 @@ class AthenaAdapter(SQLAdapter):
     @classmethod
     def convert_datetime_type(cls, agate_table: agate.Table, col_idx: int) -> str:
         return "timestamp"
+
+    @available
+    def validate_filename(self, filename: str) -> Union[str, ValueError]:
+        if len(filename.split("__")) != 2:
+            raise ValueError(f"The filename '{filename}' is not correctly formatted.")
+        return filename
+
+    @available
+    def validate_database_name(
+        self, database_name_from_path: str, database_name_from_file: str
+    ) -> Union[str, ValueError]:
+        if database_name_from_path != database_name_from_file:
+            raise ValueError(
+                f"The database names '{database_name_from_path}' in the file path and "
+                f"'{database_name_from_file}' in the filename do not match."
+            )
+        return database_name_from_path
 
     @available
     def generate_s3_write_path(
