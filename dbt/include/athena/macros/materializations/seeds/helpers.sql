@@ -12,7 +12,7 @@
   {%- set quote_seed_column = model['config'].get('quote_columns', None) -%}
 
   {% set sql %}
-    create external table {{ this.render() }} (
+    create external table {{ this.render_hive() }} (
         {%- for col_name in agate_table.column_names -%}
             {%- set inferred_type = adapter.convert_type(agate_table, loop.index0) -%}
             {%- set type = column_override.get(col_name, inferred_type) -%}
