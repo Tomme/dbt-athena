@@ -98,6 +98,9 @@ _Additional information_
   * Custom field delimiter, for when format is set to `TEXTFILE`
 * `unique_key` (`default=none`)
   * In Iceberg tables using `merge` update strategy, `unique_key` must be set to the column(s) to use to merge updates. It may be a single column or concatenated list of columns (i.e. `col1 || col2`)
+* `on_schema_change` (`default='ignore'`)
+  * Action to take when the table's schema changes
+  * Supports `append_new_columns`, `ignore` and `fail`
   
 More information: [CREATE TABLE AS][create-table-as]
 

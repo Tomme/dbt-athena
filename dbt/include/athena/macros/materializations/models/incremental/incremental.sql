@@ -18,6 +18,7 @@
   {% set existing_relation = load_relation(this) %}
   {% set tmp_suffix = athena__unique_suffix() %}
   {% set tmp_relation = make_temp_relation(this, tmp_suffix) %}
+  {% set on_schema_change = incremental_validate_on_schema_change(config.get('on_schema_change'), default='ignore') %}
 
   {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
@@ -40,6 +41,7 @@
       {% endif %}
 
       {% do run_query(create_iceberg_table(target_relation, column_list, partitioned_by, external_location)) %}
+      {% set existing_relation = load_relation(this) %}
   {% endif %}
 
   {% if existing_relation is none and format | lower != 'iceberg' %}
@@ -53,6 +55,12 @@
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
+      
+      {% if existing_relation is not none %}
+          {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
+          {% set dest_columns = process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
+      {% endif %}
+
       {% do delete_overlapping_partitions(target_relation, tmp_relation, partitioned_by, format) %}
       {% set build_sql = incremental_insert(tmp_relation, target_relation) %}
       {% do to_drop.append(tmp_relation) %}
@@ -64,6 +72,12 @@
 
       -- stage new changes
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
+
+      {% if existing_relation is not none %}
+          {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
+          {% set dest_columns = process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
+      {% endif %}
+
       {% set new_tmp_insert = merge_insert_existing(target_relation, tmp_relation, unique_key) %}
 
       -- save existing rows NOT being updated in stage to temp table
@@ -93,6 +107,12 @@
         {% endif %}
       {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
+      
+      {% if existing_relation is not none %}
+          {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
+          {% set dest_columns = process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
+      {% endif %}
+
       {% set build_sql = incremental_insert(tmp_relation, target_relation) %}
       {% do to_drop.append(tmp_relation) %}
   {% endif %}
