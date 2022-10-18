@@ -144,3 +144,5 @@ cython_debug/
 test.py
 test_model
 test_profile
+logs/
+.user.yml

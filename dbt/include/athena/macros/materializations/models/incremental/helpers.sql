@@ -94,19 +94,30 @@
   where {{ unique_key }} in (select {{ unique_key }} from {{ tmp_relation.schema }}.{{ tmp_relation.table }})
 {% endmacro %}
 
-{% macro merge_insert_existing(target_relation, tmp_relation, unique_key) %}
+{% macro get_partition_values(tmp_relation, partition_column) %}
+    select distinct {{ partition_column }}
+    from {{ tmp_relation.schema }}.{{ tmp_relation.table }}
+{% endmacro %}
+
+{% macro merge_insert_existing(target_relation, tmp_relation, unique_key, partition_where_condition=none) %}
   {%- set dest_columns = adapter.get_columns_in_relation(target_relation) -%}
   with existing as (
     select
     {{ unique_key }} as dbt__unique_key,
     {{ dest_columns | map(attribute='name') | join(', ') }}
     from {{ target_relation.schema }}.{{ target_relation.table }}
+    {% if partition_where_condition is not none %}
+    where {{ partition_where_condition }}
+    {% endif %}
   ),
   new as (
     select
     {{ unique_key }} as dbt__unique_key,
     {{ dest_columns | map(attribute='name') | join(', ') }}
     from {{ tmp_relation.schema }}.{{ tmp_relation.table }}
+    {% if partition_where_condition is not none %}
+    where {{ partition_where_condition }}
+    {% endif %}
   )
   select
   {%- set col_updates = [] -%}

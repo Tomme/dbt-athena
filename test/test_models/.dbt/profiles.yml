@@ -1,0 +1,11 @@
+dbt_test_athena:
+  target: "test"
+  outputs:
+    test:
+      type: athena
+      s3_staging_dir: "{{ env_var('DBT_TEST_ATHENA_S3_STAGING_DIR') }}"
+      schema: "{{ env_var('DBT_TEST_ATHENA_SCHEMA') }}"
+      work_group: "{{ env_var('DBT_TEST_ATHENA_WORKGROUP') }}"
+      region_name: "{{ env_var('DBT_TEST_ATHENA_REGION') }}"
+      database: "{{ env_var('DBT_TEST_ATHENA_DATABASE', 'awsdatacatalog') }}"
+      threads: 2
