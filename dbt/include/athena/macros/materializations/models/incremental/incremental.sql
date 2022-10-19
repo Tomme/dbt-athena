@@ -26,7 +26,7 @@
   {{ run_hooks(pre_hooks, inside_transaction=True) }}
 
   {% set to_drop = [] %}
-  
+
   -- ICEBERG CTAS is not supported by Athena, create table first
   {% if existing_relation is none and format | lower == 'iceberg' %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
@@ -55,7 +55,7 @@
           {% do adapter.drop_relation(tmp_relation) %}
       {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
-      
+
       {% if existing_relation is not none %}
           {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
           {% set dest_columns = process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
@@ -81,14 +81,18 @@
       {% if partitioned_by is not none %}
         {% set where_clauses = [] %}
         {% for column in partitioned_by %}
-          {% set partition_values = [] %}
           {% set values = run_query(get_partition_values(tmp_relation, column)) %}
+          {% set partition_values = [] %}
           {% for value in values %}
             {% do partition_values.append(column ~ "='" ~ value[0] ~ "'") %}
           {% endfor %}
           {% do where_clauses.append('(' ~ partition_values|join(' OR ') ~ ')') %}
         {% endfor %}
-        {% set partition_where_condition = where_clauses|join(' AND ') %}
+        {% if where_clauses | length > 0 %}
+            {% set partition_where_condition = where_clauses|join(' AND ') %}
+        {% else %}
+            {% set partition_where_condition = none %}
+        {% endif %}
       {% else %}
         {% set partition_where_condition = none %}
       {% endif %}
@@ -126,7 +130,7 @@
         {% endif %}
       {% endif %}
       {% do run_query(create_table_as(True, tmp_relation, sql)) %}
-      
+
       {% if existing_relation is not none %}
           {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
           {% set dest_columns = process_schema_changes(on_schema_change, tmp_relation, existing_relation) %}
